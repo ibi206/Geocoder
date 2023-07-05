@@ -71,10 +71,10 @@ final class Geoapify extends AbstractHttpProvider implements Provider
                 $builder = new AddressBuilder($this->getName());
                 $builder->setCountryCode($properties['country_code']);
                 $builder->setCountry($properties['country']);
-                $builder->setStreetName($properties['street']);
-                $builder->setStreetNumber($properties['housenumber']);
-                $builder->setLocality($properties['city']);
-                $builder->setPostalCode($properties['postcode']);
+                $builder->setStreetName($properties['street'] ?? '');
+                $builder->setStreetNumber($properties['housenumber'] ?? '');
+                $builder->setLocality($properties['city'] ?? '');
+                $builder->setPostalCode($properties['postcode'] ?? '');
                 $builder->setCoordinates($properties['lat'], $properties['lon']);
                 $builder->setTimezone($properties['timezone']['name']);
                 $results[] = $builder->build();
@@ -89,7 +89,7 @@ final class Geoapify extends AbstractHttpProvider implements Provider
      */
     public function reverseQuery(ReverseQuery $query): Collection
     {
-        // TODO: Implement reverseQuery() method.
+        return new AddressCollection([]);
     }
 
     /**
