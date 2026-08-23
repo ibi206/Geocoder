@@ -5,34 +5,54 @@
 
 version: 2
 updates:
-  - package-ecosystem: "github-actions" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  # Keep GitHub Actions up to date.
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
       interval: "monthly"
-  - package-ecosystem: "composer" # See documentation for possible values
-    directory: "/" # Location of package manifests
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Root package.
+  - package-ecosystem: "composer"
+    directory: "/"
     schedule:
       interval: "monthly"
-  - package-ecosystem: "composer" # See documentation for possible values
-    directory: "/src/Common" # Location of package manifests
+    versioning-strategy: "widen"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "php"
+
+  # Components (exported to their own repositories via subtree).
+  - package-ecosystem: "composer"
+    directory: "/src/Common"
     schedule:
       interval: "monthly"
+    versioning-strategy: "widen"
+    open-pull-requests-limit: 10
     labels:
       - "dependencies"
       - "php"
       - "common"
-  - package-ecosystem: "composer" # See documentation for possible values
-    directory: "/src/Http" # Location of package manifests
+  - package-ecosystem: "composer"
+    directory: "/src/Http"
     schedule:
       interval: "monthly"
+    versioning-strategy: "widen"
+    open-pull-requests-limit: 10
     labels:
       - "dependencies"
       - "php"
       - "http"
-  - package-ecosystem: "composer" # See documentation for possible values
-    directory: "/src/Plugin" # Location of package manifests
+  - package-ecosystem: "composer"
+    directory: "/src/Plugin"
     schedule:
       interval: "monthly"
+    versioning-strategy: "widen"
+    open-pull-requests-limit: 10
     labels:
       - "dependencies"
       - "php"

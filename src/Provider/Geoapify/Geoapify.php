@@ -50,6 +50,10 @@ final class Geoapify extends AbstractHttpProvider implements Provider
             $this->apiKey,
             rawurlencode($query->getText()));
 
+        if ($queryData = $query->getAllData()) {
+            $url .= "&" . http_build_query($queryData, '', '&', PHP_QUERY_RFC3986);
+        }
+
         return $this->executeQuery($url, $query->getLocale());
     }
 
