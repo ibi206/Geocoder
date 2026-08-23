@@ -15,14 +15,14 @@ namespace Geocoder\Provider\Photon;
 use Geocoder\Collection;
 use Geocoder\Exception\InvalidServerResponse;
 use Geocoder\Exception\UnsupportedOperation;
+use Geocoder\Http\Provider\AbstractHttpProvider;
 use Geocoder\Location;
 use Geocoder\Model\AddressBuilder;
 use Geocoder\Model\AddressCollection;
+use Geocoder\Provider\Photon\Model\PhotonAddress;
+use Geocoder\Provider\Provider;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
-use Geocoder\Http\Provider\AbstractHttpProvider;
-use Geocoder\Provider\Provider;
-use Geocoder\Provider\Photon\Model\PhotonAddress;
 use Psr\Http\Client\ClientInterface;
 
 /**
@@ -38,8 +38,6 @@ final class Photon extends AbstractHttpProvider implements Provider
 
     /**
      * @param ClientInterface $client an HTTP client
-     *
-     * @return Photon
      */
     public static function withKomootServer(ClientInterface $client): self
     {
@@ -57,9 +55,6 @@ final class Photon extends AbstractHttpProvider implements Provider
         $this->rootUrl = rtrim($rootUrl, '/');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function geocodeQuery(GeocodeQuery $query): Collection
     {
         $address = $query->getText();
@@ -75,39 +70,18 @@ final class Photon extends AbstractHttpProvider implements Provider
                 'q' => $address,
                 'limit' => $query->getLimit(),
                 'lang' => $query->getLocale(),
+                'lat' => $query->getData('lat'),
+                'lon' => $query->getData('lon'),
             ]);
-
-        $json = $this->executeQuery($url, $query->getLocale());
-
-        if (!isset($json->features) || empty($json->features)) {
-            return new AddressCollection([]);
+        $url .= $this->buildLayerFilterQuery($query->getData('layer'));
+        $osmTagFilters = $this->buildOsmTagFilterQuery($query->getData('osm_tag'));
+        if (!empty($osmTagFilters)) {
+            $url .= $osmTagFilters;
         }
-
-        $results = [];
-        foreach ($json->features as $feature) {
-            $results[] = $this->featureToAddress($feature);
+        $bboxQueryString = $this->buildBboxFilterQuery($query);
+        if (!is_null($bboxQueryString)) {
+            $url .= $bboxQueryString;
         }
-
-        return new AddressCollection($results);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function reverseQuery(ReverseQuery $query): Collection
-    {
-        $coordinates = $query->getCoordinates();
-
-        $longitude = $coordinates->getLongitude();
-        $latitude = $coordinates->getLatitude();
-
-        $url = $this->rootUrl
-            .'/reverse?'
-            .http_build_query([
-                'lat' => $latitude,
-                'lon' => $longitude,
-                'lang' => $query->getLocale(),
-            ]);
 
         $json = $this->executeQuery($url);
 
@@ -123,11 +97,42 @@ final class Photon extends AbstractHttpProvider implements Provider
         return new AddressCollection($results);
     }
 
-    /**
-     * @param \stdClass $feature
-     *
-     * @return Location
-     */
+    public function reverseQuery(ReverseQuery $query): Collection
+    {
+        $coordinates = $query->getCoordinates();
+
+        $longitude = $coordinates->getLongitude();
+        $latitude = $coordinates->getLatitude();
+
+        $url = $this->rootUrl
+            .'/reverse?'
+            .http_build_query([
+                'lat' => $latitude,
+                'lon' => $longitude,
+                'radius' => $query->getData('radius'),
+                'limit' => $query->getLimit(),
+                'lang' => $query->getLocale(),
+            ]);
+        $url .= $this->buildLayerFilterQuery($query->getData('layer'));
+        $osmTagFilters = $this->buildOsmTagFilterQuery($query->getData('osm_tag'));
+        if (!empty($osmTagFilters)) {
+            $url .= $osmTagFilters;
+        }
+
+        $json = $this->executeQuery($url);
+
+        if (!isset($json->features) || empty($json->features)) {
+            return new AddressCollection([]);
+        }
+
+        $results = [];
+        foreach ($json->features as $feature) {
+            $results[] = $this->featureToAddress($feature);
+        }
+
+        return new AddressCollection($results);
+    }
+
     private function featureToAddress(\stdClass $feature): Location
     {
         $builder = new AddressBuilder($this->getName());
@@ -149,31 +154,81 @@ final class Photon extends AbstractHttpProvider implements Provider
         }
 
         /** @var PhotonAddress $address */
-        $address = $builder->build(PhotonAddress::class)
+        $address = $builder->build(PhotonAddress::class);
+
+        $address = $address
             ->withOSMId($properties->osm_id ?? null)
             ->withOSMType($properties->osm_type ?? null)
             ->withOSMTag(
                 $properties->osm_key ?? null,
                 $properties->osm_value ?? null
             )
-            ->withName($properties->name ?? null);
+            ->withName($properties->name ?? null)
+            ->withState($properties->state ?? null)
+            ->withCounty($properties->county ?? null)
+            ->withDistrict($properties->district ?? null)
+            ->withType($properties->type ?? null);
 
         return $address;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return 'photon';
     }
 
     /**
-     * @param string $url
-     *
-     * @return \stdClass
+     * @param string|string[]|null $layers
      */
+    private function buildLayerFilterQuery(mixed $layers): string
+    {
+        $query = '';
+        if (null === $layers) {
+            return $query;
+        }
+        if (is_string($layers)) {
+            return '&layer='.urlencode($layers);
+        }
+        foreach ($layers as $layer) {
+            $query .= '&layer='.urlencode($layer);
+        }
+
+        return $query;
+    }
+
+    /**
+     * @param string|array<int, string>|null $filters
+     */
+    private function buildOsmTagFilterQuery($filters): string
+    {
+        $query = '';
+        if (null === $filters) {
+            return $query;
+        }
+        if (is_string($filters)) {
+            return '&osm_tag='.urlencode($filters);
+        }
+        foreach ($filters as $filter) {
+            $query .= '&osm_tag='.urlencode($filter);
+        }
+
+        return $query;
+    }
+
+    private function buildBboxFilterQuery(GeocodeQuery $query): ?string
+    {
+        if (null === $query->getBounds()) {
+            return null;
+        }
+
+        return '&bbox='.sprintf('%f,%f,%f,%f',
+            $query->getBounds()->getWest(),
+            $query->getBounds()->getSouth(),
+            $query->getBounds()->getEast(),
+            $query->getBounds()->getNorth()
+        );
+    }
+
     private function executeQuery(string $url): \stdClass
     {
         $content = $this->getUrlContents($url);

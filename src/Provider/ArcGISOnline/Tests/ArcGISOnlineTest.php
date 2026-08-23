@@ -15,24 +15,24 @@ namespace Geocoder\Provider\ArcGISOnlineTest\Tests;
 use Geocoder\Collection;
 use Geocoder\IntegrationTest\BaseTestCase;
 use Geocoder\Location;
+use Geocoder\Provider\ArcGISOnline\ArcGISOnline;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
-use Geocoder\Provider\ArcGISOnline\ArcGISOnline;
 
 class ArcGISOnlineTest extends BaseTestCase
 {
-    protected function getCacheDir()
+    protected function getCacheDir(): string
     {
         return __DIR__.'/.cached_responses';
     }
 
-    public function testGetName()
+    public function testGetName(): void
     {
         $provider = new ArcGISOnline($this->getMockedHttpClient());
         $this->assertEquals('arcgis_online', $provider->getName());
     }
 
-    public function testGeocodeWithLocalhostIPv4()
+    public function testGeocodeWithLocalhostIPv4(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('The ArcGISOnline provider does not support IP addresses, only street addresses.');
@@ -41,7 +41,7 @@ class ArcGISOnlineTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('127.0.0.1'));
     }
 
-    public function testGeocodeWithLocalhostIPv6()
+    public function testGeocodeWithLocalhostIPv6(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('The ArcGISOnline provider does not support IP addresses, only street addresses.');
@@ -50,17 +50,17 @@ class ArcGISOnlineTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('::1'));
     }
 
-    public function testGeocodeWithRealAddress()
+    public function testGeocodeWithRealAddress(): void
     {
         $provider = new ArcGISOnline($this->getHttpClient());
         $results = $provider->geocodeQuery(GeocodeQuery::create('10 avenue Gambetta, Paris, France'));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(5, $results);
 
         /** @var Location $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(48.863279997000461, $result->getCoordinates()->getLatitude(), 0.0001);
         $this->assertEqualsWithDelta(2.3890199980004354, $result->getCoordinates()->getLongitude(), 0.0001);
         $this->assertEquals(10, $result->getStreetNumber());
@@ -80,7 +80,7 @@ class ArcGISOnlineTest extends BaseTestCase
         $this->assertNull($result->getTimezone());
     }
 
-    public function testGeocodeWithToken()
+    public function testGeocodeWithToken(): void
     {
         if (!isset($_SERVER['ARCGIS_TOKEN'])) {
             $this->markTestSkipped('You need to configure the ARCGIS_TOKEN value in phpunit.xml');
@@ -88,11 +88,11 @@ class ArcGISOnlineTest extends BaseTestCase
         $provider = ArcGISOnline::token($this->getHttpClient($_SERVER['ARCGIS_TOKEN']), $_SERVER['ARCGIS_TOKEN']);
         $results = $provider->geocodeQuery(GeocodeQuery::create('5754 WI-23, Spring Green, WI 53588, USA'));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
 
         /** @var Location $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(43.093663, $result->getCoordinates()->getLatitude(), 0.0001);
         $this->assertEqualsWithDelta(-90.131796, $result->getCoordinates()->getLongitude(), 0.0001);
         $this->assertEquals(5754, $result->getStreetNumber());
@@ -112,7 +112,7 @@ class ArcGISOnlineTest extends BaseTestCase
         $this->assertNull($result->getTimezone());
     }
 
-    public function testGeocodeWithInvalidAddressWithSourceCountry()
+    public function testGeocodeWithInvalidAddressWithSourceCountry(): void
     {
         $provider = new ArcGISOnline($this->getHttpClient(), 'DNK');
         $result = $provider->geocodeQuery(GeocodeQuery::create('1 Chome-1-2 Oshiage, Sumida, Tokyo 131-8634, Japan'));
@@ -121,17 +121,17 @@ class ArcGISOnlineTest extends BaseTestCase
         $this->assertEquals(0, $result->count());
     }
 
-    public function testReverseWithRealCoordinates()
+    public function testReverseWithRealCoordinates(): void
     {
         $provider = new ArcGISOnline($this->getHttpClient(), null);
         $results = $provider->reverseQuery(ReverseQuery::fromCoordinates(48.863279997000461, 2.3890199980004354));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(1, $results);
 
         /** @var \Geocoder\Model\Address $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(48.863279997000461, $result->getCoordinates()->getLatitude(), 0.0001);
         $this->assertEqualsWithDelta(2.3890199980004354, $result->getCoordinates()->getLongitude(), 0.0001);
         $this->assertNull($result->getStreetNumber());
@@ -147,17 +147,17 @@ class ArcGISOnlineTest extends BaseTestCase
         $this->assertNull($result->getTimezone());
     }
 
-    public function testGeocodeWithCity()
+    public function testGeocodeWithCity(): void
     {
         $provider = new ArcGISOnline($this->getHttpClient());
         $results = $provider->geocodeQuery(GeocodeQuery::create('Hannover'));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(5, $results);
 
         /** @var Location $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(52.37227000000007, $result->getCoordinates()->getLatitude(), 0.0001);
         $this->assertEqualsWithDelta(9.738150000000076, $result->getCoordinates()->getLongitude(), 0.0001);
         $this->assertNull($result->getStreetNumber());
@@ -175,7 +175,7 @@ class ArcGISOnlineTest extends BaseTestCase
 
         /** @var Location $result */
         $result = $results->get(1);
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(39.391768472000479, $result->getCoordinates()->getLatitude(), 0.0001);
         $this->assertEqualsWithDelta(-77.440257128999633, $result->getCoordinates()->getLongitude(), 0.0001);
         $this->assertNull($result->getStreetName());
@@ -186,7 +186,7 @@ class ArcGISOnlineTest extends BaseTestCase
 
         /** @var Location $result */
         $result = $results->get(2);
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(53.174198173, $result->getCoordinates()->getLatitude(), 0.0001);
         $this->assertEqualsWithDelta(8.5069383810005, $result->getCoordinates()->getLongitude(), 0.0001);
         $this->assertNull($result->getStreetName());
@@ -197,7 +197,7 @@ class ArcGISOnlineTest extends BaseTestCase
 
         /** @var Location $result */
         $result = $results->get(3);
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(47.111290000000054, $result->getCoordinates()->getLatitude(), 0.0001);
         $this->assertEqualsWithDelta(-101.42142999999999, $result->getCoordinates()->getLongitude(), 0.0001);
         $this->assertNull($result->getStreetName());
@@ -208,7 +208,7 @@ class ArcGISOnlineTest extends BaseTestCase
 
         /** @var Location $result */
         $result = $results->get(4);
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(32.518790000000024, $result->getCoordinates()->getLatitude(), 0.0001);
         $this->assertEqualsWithDelta(-90.06298999999996, $result->getCoordinates()->getLongitude(), 0.0001);
         $this->assertNull($result->getStreetName());
@@ -219,7 +219,7 @@ class ArcGISOnlineTest extends BaseTestCase
         $this->assertEquals('USA', $result->getCountry()->getCode());
     }
 
-    public function testGeocodeWithRealIPv4()
+    public function testGeocodeWithRealIPv4(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('The ArcGISOnline provider does not support IP addresses, only street addresses.');
@@ -228,7 +228,7 @@ class ArcGISOnlineTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('88.188.221.14'));
     }
 
-    public function testGeocodeWithRealIPv6()
+    public function testGeocodeWithRealIPv6(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('The ArcGISOnline provider does not support IP addresses, only street addresses.');
@@ -237,7 +237,7 @@ class ArcGISOnlineTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('::ffff:88.188.221.14'));
     }
 
-    public function testGeocodeWithInvalidToken()
+    public function testGeocodeWithInvalidToken(): void
     {
         $this->expectException(\Geocoder\Exception\InvalidCredentials::class);
         $this->expectExceptionMessage('Invalid token invalid-token');

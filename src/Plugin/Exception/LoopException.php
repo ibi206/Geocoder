@@ -27,7 +27,7 @@ class LoopException extends \RuntimeException implements Exception
      */
     private $query;
 
-    public static function create($message, Query $query)
+    public static function create(string $message, Query $query): self
     {
         $ex = new self($message);
         $ex->query = $query;
@@ -35,9 +35,6 @@ class LoopException extends \RuntimeException implements Exception
         return $ex;
     }
 
-    /**
-     * @return Query
-     */
     public function getQuery(): Query
     {
         return $this->query;

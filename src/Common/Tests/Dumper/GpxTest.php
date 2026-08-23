@@ -12,8 +12,8 @@ declare(strict_types=1);
 
 namespace Geocoder\Tests\Dumper;
 
-use Geocoder\Geocoder;
 use Geocoder\Dumper\Gpx;
+use Geocoder\Geocoder;
 use Geocoder\Model\Address;
 use PHPUnit\Framework\TestCase;
 
@@ -32,7 +32,7 @@ class GpxTest extends TestCase
         $this->dumper = new Gpx();
     }
 
-    public function testDump()
+    public function testDump(): void
     {
         $address = Address::createFromArray([]);
         $expected = sprintf(<<<'GPX'
@@ -48,8 +48,7 @@ version="1.0"
         <type><![CDATA[Address]]></type>
     </wpt>
 </gpx>
-GPX
-        , Geocoder::VERSION, '0', '0');
+GPX, Geocoder::VERSION, '0', '0');
 
         $result = $this->dumper->dump($address);
 
@@ -57,7 +56,7 @@ GPX
         $this->assertEquals($expected, $result);
     }
 
-    public function testDumpWithData()
+    public function testDumpWithData(): void
     {
         $address = Address::createFromArray([
             'latitude' => 48.8631507,
@@ -77,8 +76,7 @@ version="1.0"
         <type><![CDATA[Address]]></type>
     </wpt>
 </gpx>
-GPX
-        , Geocoder::VERSION, $address->getCoordinates()->getLatitude(), $address->getCoordinates()->getLongitude());
+GPX, Geocoder::VERSION, $address->getCoordinates()->getLatitude(), $address->getCoordinates()->getLongitude());
 
         $result = $this->dumper->dump($address);
 
@@ -86,7 +84,7 @@ GPX
         $this->assertEquals($expected, $result);
     }
 
-    public function testDumpWithBounds()
+    public function testDumpWithBounds(): void
     {
         $address = Address::createFromArray([
             'latitude' => 48.8631507,
@@ -114,8 +112,7 @@ version="1.0"
         <type><![CDATA[Address]]></type>
     </wpt>
 </gpx>
-GPX
-        , Geocoder::VERSION, $bounds['east'], '48.863151', $bounds['east'], '48.863151', $bounds['north'], $bounds['west']);
+GPX, Geocoder::VERSION, $bounds['east'], '48.863151', $bounds['east'], '48.863151', $bounds['north'], $bounds['west']);
 
         $this->assertNotNull($address->getBounds());
 
@@ -125,7 +122,7 @@ GPX
         $this->assertEquals($expected, $result);
     }
 
-    public function testDumpWithName()
+    public function testDumpWithName(): void
     {
         $bounds = [
             'south' => 48.8631507,
@@ -159,8 +156,7 @@ version="1.0"
         <type><![CDATA[Address]]></type>
     </wpt>
 </gpx>
-GPX
-        , Geocoder::VERSION, $bounds['east'], '48.863151', $bounds['east'], '48.863151', $bounds['north'], $bounds['west']);
+GPX, Geocoder::VERSION, $bounds['east'], '48.863151', $bounds['east'], '48.863151', $bounds['north'], $bounds['west']);
 
         $this->assertNotNull($address->getBounds());
 

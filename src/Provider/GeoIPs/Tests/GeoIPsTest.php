@@ -15,24 +15,24 @@ namespace Geocoder\Provider\GeoIPs\Tests;
 use Geocoder\Collection;
 use Geocoder\IntegrationTest\BaseTestCase;
 use Geocoder\Location;
+use Geocoder\Provider\GeoIPs\GeoIPs;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
-use Geocoder\Provider\GeoIPs\GeoIPs;
 
 class GeoIPsTest extends BaseTestCase
 {
-    public function testGetName()
+    public function testGetName(): void
     {
         $provider = new GeoIPs($this->getMockedHttpClient(), 'api_key');
         $this->assertEquals('geo_ips', $provider->getName());
     }
 
-    protected function getCacheDir()
+    protected function getCacheDir(): string
     {
         return __DIR__.'/.cached_responses';
     }
 
-    public function testGeocodeWithAddress()
+    public function testGeocodeWithAddress(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('The GeoIPs provider does not support street addresses, only IPv4 addresses.');
@@ -41,22 +41,22 @@ class GeoIPsTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('10 avenue Gambetta, Paris, France'));
     }
 
-    public function testGeocodeWithLocalhostIPv4()
+    public function testGeocodeWithLocalhostIPv4(): void
     {
         $provider = new GeoIPs($this->getMockedHttpClient(), 'api_key');
         $results = $provider->geocodeQuery(GeocodeQuery::create('127.0.0.1'));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(1, $results);
 
         /** @var Location $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEquals('localhost', $result->getLocality());
         $this->assertEquals('localhost', $result->getCountry()->getName());
     }
 
-    public function testGeocodeWithLocalhostIPv6()
+    public function testGeocodeWithLocalhostIPv6(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('The GeoIPs provider does not support IPv6 addresses, only IPv4 addresses.');
@@ -65,7 +65,7 @@ class GeoIPsTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('::1'));
     }
 
-    public function testGeocodeWithRealIPv4GetsNullContent()
+    public function testGeocodeWithRealIPv4GetsNullContent(): void
     {
         $this->expectException(\Geocoder\Exception\InvalidServerResponse::class);
 
@@ -73,7 +73,7 @@ class GeoIPsTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('74.200.247.59'));
     }
 
-    public function testGeocodeWithRealIPv4GetsEmptyContent()
+    public function testGeocodeWithRealIPv4GetsEmptyContent(): void
     {
         $this->expectException(\Geocoder\Exception\InvalidServerResponse::class);
 
@@ -81,7 +81,7 @@ class GeoIPsTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('74.200.247.59'));
     }
 
-    public function testGeocodeWithRealIPv4GetsFakeContentFormattedEmpty()
+    public function testGeocodeWithRealIPv4GetsFakeContentFormattedEmpty(): void
     {
         $json = '{"response":{
             "status": "Propper Request",
@@ -112,12 +112,12 @@ class GeoIPsTest extends BaseTestCase
         $provider = new GeoIPs($this->getMockedHttpClient($json), 'api_key');
         $results = $provider->geocodeQuery(GeocodeQuery::create('66.147.244.214'));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(1, $results);
 
         /** @var Location $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertNull($result->getCoordinates());
 
         $this->assertNull($result->getPostalCode());
@@ -127,7 +127,7 @@ class GeoIPsTest extends BaseTestCase
         $this->assertNull($result->getTimezone());
     }
 
-    public function testGeocodeWithRealIPv4GetsFakeContent()
+    public function testGeocodeWithRealIPv4GetsFakeContent(): void
     {
         $json = '{"response":{
             "status": "Propper Request",
@@ -154,14 +154,14 @@ class GeoIPsTest extends BaseTestCase
         $provider = new GeoIPs($this->getMockedHttpClient($json), 'api_key');
         $results = $provider->geocodeQuery(GeocodeQuery::create('66.147.244.214'));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(1, $results);
 
         /** @var Location $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
-        $this->assertEquals(40.3402, $result->getCoordinates()->getLatitude(), '', 0.0001);
-        $this->assertEquals(-111.6073, $result->getCoordinates()->getLongitude(), '', 0.0001);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
+        $this->assertEqualsWithDelta(40.3402, $result->getCoordinates()->getLatitude(), 0.0001);
+        $this->assertEqualsWithDelta(-111.6073, $result->getCoordinates()->getLongitude(), 0.0001);
         $this->assertNull($result->getStreetName());
         $this->assertNull($result->getPostalCode());
         $this->assertEquals('PROVO', $result->getLocality());
@@ -174,7 +174,7 @@ class GeoIPsTest extends BaseTestCase
         $this->assertEquals('MST', $result->getTimezone());
     }
 
-    public function testGeocodeWithRealIPv4AndInvalidApiKeyGetsFakeContent()
+    public function testGeocodeWithRealIPv4AndInvalidApiKeyGetsFakeContent(): void
     {
         $this->expectException(\Geocoder\Exception\InvalidCredentials::class);
         $this->expectExceptionMessage('The API key associated with your request was not recognized.');
@@ -199,7 +199,7 @@ class GeoIPsTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('74.200.247.59'));
     }
 
-    public function testGeocodeWithRealIPv4AndInvalidApiKeyGetsFakeContent2()
+    public function testGeocodeWithRealIPv4AndInvalidApiKeyGetsFakeContent2(): void
     {
         $this->expectException(\Geocoder\Exception\InvalidCredentials::class);
         $this->expectExceptionMessage('The API key has not been approved or has been disabled.');
@@ -224,7 +224,7 @@ class GeoIPsTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('74.200.247.59'));
     }
 
-    public function testGeocodeWithRealIPv4AndQuotaExceeded()
+    public function testGeocodeWithRealIPv4AndQuotaExceeded(): void
     {
         $this->expectException(\Geocoder\Exception\QuotaExceeded::class);
         $this->expectExceptionMessage('The service you have requested is over capacity.');
@@ -249,7 +249,7 @@ class GeoIPsTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('74.200.247.59'));
     }
 
-    public function testGeocodeGetsFakeContentWithIpNotFound()
+    public function testGeocodeGetsFakeContentWithIpNotFound(): void
     {
         $this->expectException(\Geocoder\Exception\InvalidArgument::class);
         $this->expectExceptionMessage('The API call should include a valid IP address.');
@@ -274,7 +274,7 @@ class GeoIPsTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('74.200.247.59'));
     }
 
-    public function testGeocodeGetsFakeContentWithKeyNotFound()
+    public function testGeocodeGetsFakeContentWithKeyNotFound(): void
     {
         $this->expectException(\Geocoder\Exception\InvalidCredentials::class);
         $this->expectExceptionMessage('The API call should include a API key parameter.');
@@ -299,7 +299,7 @@ class GeoIPsTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('74.200.247.59'));
     }
 
-    public function testGeocodeWithRealIPv4()
+    public function testGeocodeWithRealIPv4(): void
     {
         if (!isset($_SERVER['GEOIPS_API_KEY'])) {
             $this->markTestSkipped('You need to configure the GEOIPS_API_KEY value in phpunit.xml');
@@ -308,14 +308,14 @@ class GeoIPsTest extends BaseTestCase
         $provider = new GeoIPs($this->getHttpClient($_SERVER['GEOIPS_API_KEY']), $_SERVER['GEOIPS_API_KEY']);
         $results = $provider->geocodeQuery(GeocodeQuery::create('66.147.244.214'));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(1, $results);
 
         /** @var Location $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
-        $this->assertEquals(40.3402, $result->getCoordinates()->getLatitude(), '', 0.0001);
-        $this->assertEquals(-111.6073, $result->getCoordinates()->getLongitude(), '', 0.0001);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
+        $this->assertEqualsWithDelta(40.3402, $result->getCoordinates()->getLatitude(), 0.0001);
+        $this->assertEqualsWithDelta(-111.6073, $result->getCoordinates()->getLongitude(), 0.0001);
         $this->assertNull($result->getStreetName());
         $this->assertNull($result->getPostalCode());
         $this->assertEquals('PROVO', $result->getLocality());
@@ -328,7 +328,7 @@ class GeoIPsTest extends BaseTestCase
         $this->assertEquals('MST', $result->getTimezone());
     }
 
-    public function testGeocodeWithRealIPv4ZeroResults()
+    public function testGeocodeWithRealIPv4ZeroResults(): void
     {
         if (!isset($_SERVER['GEOIPS_API_KEY'])) {
             $this->markTestSkipped('You need to configure the GEOIPS_API_KEY value in phpunit.xml');
@@ -341,7 +341,7 @@ class GeoIPsTest extends BaseTestCase
         $this->assertEquals(0, $result->count());
     }
 
-    public function testReverse()
+    public function testReverse(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('The GeoIPs provider is not able to do reverse geocoding.');

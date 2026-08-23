@@ -15,25 +15,25 @@ namespace Geocoder\Provider\Geonames\Tests;
 use Geocoder\Collection;
 use Geocoder\IntegrationTest\BaseTestCase;
 use Geocoder\Location;
+use Geocoder\Provider\Geonames\Geonames;
 use Geocoder\Provider\Geonames\Model\GeonamesAddress;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
-use Geocoder\Provider\Geonames\Geonames;
 
 class GeonamesTest extends BaseTestCase
 {
-    protected function getCacheDir()
+    protected function getCacheDir(): string
     {
         return __DIR__.'/.cached_responses';
     }
 
-    public function testGetName()
+    public function testGetName(): void
     {
         $provider = new Geonames($this->getMockedHttpClient(), 'username');
         $this->assertEquals('geonames', $provider->getName());
     }
 
-    public function testGeocodeWithLocalhostIPv4()
+    public function testGeocodeWithLocalhostIPv4(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('The Geonames provider does not support IP addresses.');
@@ -42,7 +42,7 @@ class GeonamesTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('127.0.0.1'));
     }
 
-    public function testGeocodeWithLocalhostIPv6()
+    public function testGeocodeWithLocalhostIPv6(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('The Geonames provider does not support IP addresses.');
@@ -51,7 +51,7 @@ class GeonamesTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('::1'));
     }
 
-    public function testGeocodeWithUnknownCity()
+    public function testGeocodeWithUnknownCity(): void
     {
         $noPlacesFoundResponse = <<<'JSON'
 {
@@ -66,7 +66,7 @@ JSON;
         $this->assertEquals(0, $result->count());
     }
 
-    public function testGeocodeWithRealPlace()
+    public function testGeocodeWithRealPlace(): void
     {
         if (!isset($_SERVER['GEONAMES_USERNAME'])) {
             $this->markTestSkipped('You need to configure the GEONAMES_USERNAME value in phpunit.xml');
@@ -75,11 +75,11 @@ JSON;
         $provider = new Geonames($this->getHttpClient($_SERVER['GEONAMES_USERNAME']), $_SERVER['GEONAMES_USERNAME']);
         $results = $provider->geocodeQuery(GeocodeQuery::create('Harrods, London'));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
 
         /** @var GeonamesAddress $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(51.49957, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(-0.16359, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertEquals('United Kingdom', $result->getCountry()->getName());
@@ -95,7 +95,7 @@ JSON;
         $this->assertCount(10, $result->getAlternateNames());
     }
 
-    public function testGeocodeWithMultipleRealPlaces()
+    public function testGeocodeWithMultipleRealPlaces(): void
     {
         if (!isset($_SERVER['GEONAMES_USERNAME'])) {
             $this->markTestSkipped('You need to configure the GEONAMES_USERNAME value in phpunit.xml');
@@ -104,12 +104,12 @@ JSON;
         $provider = new Geonames($this->getHttpClient($_SERVER['GEONAMES_USERNAME']), $_SERVER['GEONAMES_USERNAME']);
         $results = $provider->geocodeQuery(GeocodeQuery::create('London'));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(5, $results);
 
         /** @var Location $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(51.508528775863, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(-0.12574195861816, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertNotNull($result->getBounds());
@@ -127,7 +127,7 @@ JSON;
 
         /** @var Location $result */
         $result = $results->get(1);
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(-33.015285093464, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(27.911624908447, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertNotNull($result->getBounds());
@@ -146,7 +146,7 @@ JSON;
 
         /** @var Location $result */
         $result = $results->get(2);
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(51.512788890295, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(-0.091838836669922, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertNotNull($result->getBounds());
@@ -165,7 +165,7 @@ JSON;
 
         /** @var Location $result */
         $result = $results->get(3);
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(42.983389283, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(-81.233042387, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertNotNull($result->getBounds());
@@ -182,7 +182,7 @@ JSON;
 
         /** @var Location $result */
         $result = $results->get(4);
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(41.3556539, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(-72.0995209, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertNotNull($result->getBounds());
@@ -199,7 +199,7 @@ JSON;
         $this->assertEquals('America/New_York', $result->getTimezone());
     }
 
-    public function testGeocodeWithMultipleRealPlacesWithLocale()
+    public function testGeocodeWithMultipleRealPlacesWithLocale(): void
     {
         if (!isset($_SERVER['GEONAMES_USERNAME'])) {
             $this->markTestSkipped('You need to configure the GEONAMES_USERNAME value in phpunit.xml');
@@ -208,12 +208,12 @@ JSON;
         $provider = new Geonames($this->getHttpClient($_SERVER['GEONAMES_USERNAME']), $_SERVER['GEONAMES_USERNAME']);
         $results = $provider->geocodeQuery(GeocodeQuery::create('London')->withLocale('it_IT'));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(5, $results);
 
         /** @var Location $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(51.50853, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(-0.12574, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertNotNull($result->getBounds());
@@ -231,7 +231,7 @@ JSON;
 
         /** @var Location $result */
         $result = $results->get(1);
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(-33.015285093464, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(27.911624908447, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertNotNull($result->getBounds());
@@ -250,7 +250,7 @@ JSON;
 
         /** @var Location $result */
         $result = $results->get(2);
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(51.512788890295, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(-0.091838836669922, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertNotNull($result->getBounds());
@@ -269,7 +269,7 @@ JSON;
 
         /** @var Location $result */
         $result = $results->get(3);
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(42.983389283, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(-81.233042387, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertNotNull($result->getBounds());
@@ -286,7 +286,7 @@ JSON;
 
         /** @var Location $result */
         $result = $results->get(4);
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(41.3556539, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(-72.0995209, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertNotNull($result->getBounds());
@@ -303,7 +303,7 @@ JSON;
         $this->assertEquals('America/New_York', $result->getTimezone());
     }
 
-    public function testReverseWithRealCoordinates()
+    public function testReverseWithRealCoordinates(): void
     {
         if (!isset($_SERVER['GEONAMES_USERNAME'])) {
             $this->markTestSkipped('You need to configure the GEONAMES_USERNAME value in phpunit.xml');
@@ -312,12 +312,12 @@ JSON;
         $provider = new Geonames($this->getHttpClient($_SERVER['GEONAMES_USERNAME']), $_SERVER['GEONAMES_USERNAME']);
         $results = $provider->reverseQuery(ReverseQuery::fromCoordinates(51.50853, -0.12574));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(1, $results);
 
         /** @var Location $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(51.50853, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(-0.12574, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertEquals('London', $result->getLocality());
@@ -329,7 +329,7 @@ JSON;
         $this->assertEquals('Europe/London', $result->getTimezone());
     }
 
-    public function testReverseWithRealCoordinatesWithLocale()
+    public function testReverseWithRealCoordinatesWithLocale(): void
     {
         if (!isset($_SERVER['GEONAMES_USERNAME'])) {
             $this->markTestSkipped('You need to configure the GEONAMES_USERNAME value in phpunit.xml');
@@ -338,12 +338,12 @@ JSON;
         $provider = new Geonames($this->getHttpClient($_SERVER['GEONAMES_USERNAME']), $_SERVER['GEONAMES_USERNAME']);
         $results = $provider->reverseQuery(ReverseQuery::fromCoordinates(51.50853, -0.12574)->withLocale('it_IT'));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(1, $results);
 
         /** @var Location $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(51.50853, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(-0.12574, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertEquals('Londra', $result->getLocality());
@@ -355,7 +355,7 @@ JSON;
         $this->assertEquals('Europe/London', $result->getTimezone());
     }
 
-    public function testReverseWithBadCoordinates()
+    public function testReverseWithBadCoordinates(): void
     {
         $badCoordinateResponse = <<<'JSON'
 {

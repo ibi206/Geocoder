@@ -13,22 +13,22 @@ use Psr\Http\Client\ClientInterface;
 
 class IntegrationTest extends ProviderIntegrationTest
 {
-    protected $skippedTests = [
+    protected array $skippedTests = [
         'testReverseQueryWithNoResults' => 'AzureMaps API returns "position":"0.000000,0.000000" for reverse query at 0,0.',
     ];
 
     /**
-     * @return \Geocoder\Provider\Provider that is used in the tests
+     * @return Geocoder\Provider\Provider that is used in the tests
      */
     protected function createProvider(ClientInterface $httpClient)
     {
-        return new \Geocoder\Provider\AzureMaps\AzureMaps($httpClient, $_SERVER['AZURE_MAPS_SUBSCRIPTION_KEY']);
+        return new Geocoder\Provider\AzureMaps\AzureMaps($httpClient, $_SERVER['AZURE_MAPS_SUBSCRIPTION_KEY']);
     }
 
     /**
      * @return string the directory where cached responses are stored
      */
-    protected function getCacheDir()
+    protected function getCacheDir(): string
     {
         return __DIR__.'/.cached_responses';
     }
@@ -36,7 +36,7 @@ class IntegrationTest extends ProviderIntegrationTest
     /**
      * @return string the API key or substring to be removed from cache
      */
-    protected function getApiKey()
+    protected function getApiKey(): string
     {
         return $_SERVER['AZURE_MAPS_SUBSCRIPTION_KEY'];
     }

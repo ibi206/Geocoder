@@ -33,7 +33,7 @@ class AzureMapsTest extends BaseTestCase
         return null;
     }
 
-    public function testGeocodeWithRealAddress()
+    public function testGeocodeWithRealAddress(): void
     {
         if (!isset($_SERVER['AZURE_MAPS_SUBSCRIPTION_KEY'])) {
             $this->markTestSkipped('You need to configure the AZURE_MAPS_SUBSCRIPTION_KEY value in phpunit.xml');
@@ -64,7 +64,7 @@ class AzureMapsTest extends BaseTestCase
         $this->assertEquals('IL', $result->getCountry()->getCode());
     }
 
-    public function testReverseWithRealCoordinates()
+    public function testReverseWithRealCoordinates(): void
     {
         if (!isset($_SERVER['AZURE_MAPS_SUBSCRIPTION_KEY'])) {
             $this->markTestSkipped('You need to configure the AZURE_MAPS_SUBSCRIPTION_KEY value in phpunit.xml');
@@ -92,5 +92,26 @@ class AzureMapsTest extends BaseTestCase
         $this->assertEquals(6266924, $result->getPostalCode());
         $this->assertEquals('Israel', $result->getCountry()->getName());
         $this->assertEquals('IL', $result->getCountry()->getCode());
+    }
+
+    public function testGeocodeIncludesMunicipality(): void
+    {
+        if (!isset($_SERVER['AZURE_MAPS_SUBSCRIPTION_KEY'])) {
+            $this->markTestSkipped('You need to configure the AZURE_MAPS_SUBSCRIPTION_KEY value in phpunit.xml');
+        }
+
+        $subscriptionKey = $_SERVER['AZURE_MAPS_SUBSCRIPTION_KEY'];
+        $provider = new AzureMaps($this->getHttpClient($subscriptionKey), $subscriptionKey);
+
+        $results = $provider->geocodeQuery(GeocodeQuery::create('Via Giuseppe Garibaldi 62, IT, Italy'));
+
+        $this->assertInstanceOf(AddressCollection::class, $results);
+        $this->assertGreaterThan(0, $results->count(), 'No results found');
+
+        $result = $results->first();
+
+        $this->assertInstanceOf(Address::class, $result);
+        $this->assertNotNull($result->getLocality(), 'Municipality (city) is missing in the response');
+        $this->assertEquals('Scisciano', $result->getLocality());
     }
 }

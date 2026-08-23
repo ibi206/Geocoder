@@ -30,7 +30,7 @@ final class GooglePlace extends Address
     private $name;
 
     /**
-     * @var array
+     * @var string[]
      */
     private $type = [];
 
@@ -105,11 +105,9 @@ final class GooglePlace extends Address
     }
 
     /**
-     * @param string|null $id
-     *
      * @return GooglePlace
      */
-    public function withId(string $id = null)
+    public function withId(?string $id = null)
     {
         $new = clone $this;
         $new->id = $id;
@@ -126,11 +124,9 @@ final class GooglePlace extends Address
     }
 
     /**
-     * @param string|null $name
-     *
      * @return GooglePlace
      */
-    public function withName(string $name = null)
+    public function withName(?string $name = null)
     {
         $new = clone $this;
         $new->name = $name;
@@ -139,7 +135,7 @@ final class GooglePlace extends Address
     }
 
     /**
-     * @return array
+     * @return string[]
      */
     public function getType(): array
     {
@@ -147,7 +143,7 @@ final class GooglePlace extends Address
     }
 
     /**
-     * @param array $type
+     * @param string[] $type
      *
      * @return GooglePlace
      */
@@ -168,11 +164,9 @@ final class GooglePlace extends Address
     }
 
     /**
-     * @param string|null $formattedAddress
-     *
      * @return GooglePlace
      */
-    public function withFormattedAddress(string $formattedAddress = null)
+    public function withFormattedAddress(?string $formattedAddress = null)
     {
         $new = clone $this;
         $new->formattedAddress = $formattedAddress;
@@ -189,11 +183,9 @@ final class GooglePlace extends Address
     }
 
     /**
-     * @param string|null $vicinity
-     *
      * @return GooglePlace
      */
-    public function withVicinity(string $vicinity = null)
+    public function withVicinity(?string $vicinity = null)
     {
         $new = clone $this;
         $new->vicinity = $vicinity;
@@ -204,12 +196,15 @@ final class GooglePlace extends Address
     /**
      * @return string|null
      */
-    public function getIcon(): string
+    public function getIcon()
     {
         return $this->icon;
     }
 
-    public function withIcon(string $icon = null)
+    /**
+     * @return GooglePlace
+     */
+    public function withIcon(?string $icon = null)
     {
         $new = clone $this;
         $new->icon = $icon;
@@ -217,15 +212,15 @@ final class GooglePlace extends Address
         return $new;
     }
 
-    /**
-     * @return PlusCode|null
-     */
     public function getPlusCode(): ?PlusCode
     {
         return $this->plusCode;
     }
 
-    public function withPlusCode(PlusCode $plusCode = null)
+    /**
+     * @return GooglePlace
+     */
+    public function withPlusCode(?PlusCode $plusCode = null)
     {
         $new = clone $this;
         $new->plusCode = $plusCode;
@@ -236,12 +231,17 @@ final class GooglePlace extends Address
     /**
      * @return Photo[]|null
      */
-    public function getPhotos(): array
+    public function getPhotos()
     {
         return $this->photos;
     }
 
-    public function withPhotos(array $photos = null)
+    /**
+     * @param Photo[]|null $photos
+     *
+     * @return GooglePlace
+     */
+    public function withPhotos(?array $photos = null)
     {
         $new = clone $this;
         $new->photos = $photos;
@@ -260,12 +260,15 @@ final class GooglePlace extends Address
      *
      * @return int|null
      */
-    public function getPriceLevel(): int
+    public function getPriceLevel()
     {
         return $this->priceLevel;
     }
 
-    public function withPriceLevel(int $priceLevel = null)
+    /**
+     * @return GooglePlace
+     */
+    public function withPriceLevel(?int $priceLevel = null)
     {
         $new = clone $this;
         $new->priceLevel = $priceLevel;
@@ -276,12 +279,15 @@ final class GooglePlace extends Address
     /**
      * @return float|null
      */
-    public function getRating(): float
+    public function getRating()
     {
         return $this->rating;
     }
 
-    public function withRating(float $rating = null)
+    /**
+     * @return GooglePlace
+     */
+    public function withRating(?float $rating = null)
     {
         $new = clone $this;
         $new->rating = $rating;
@@ -297,6 +303,9 @@ final class GooglePlace extends Address
         return $this->formattedPhoneNumber;
     }
 
+    /**
+     * @return GooglePlace
+     */
     public function withFormattedPhoneNumber(string $phone)
     {
         $new = clone $this;
@@ -313,6 +322,9 @@ final class GooglePlace extends Address
         return $this->internationalPhoneNumber;
     }
 
+    /**
+     * @return GooglePlace
+     */
     public function withInternationalPhoneNumber(string $phone)
     {
         $new = clone $this;
@@ -329,6 +341,9 @@ final class GooglePlace extends Address
         return $this->website;
     }
 
+    /**
+     * @return GooglePlace
+     */
     public function withWebsite(string $website)
     {
         $new = clone $this;
@@ -345,6 +360,9 @@ final class GooglePlace extends Address
         return $this->openingHours;
     }
 
+    /**
+     * @return GooglePlace
+     */
     public function withOpeningHours(OpeningHours $openingHours)
     {
         $new = clone $this;
@@ -353,14 +371,14 @@ final class GooglePlace extends Address
         return $new;
     }
 
-    /**
-     * @return bool
-     */
     public function isPermanentlyClosed(): bool
     {
         return $this->permanentlyClosed;
     }
 
+    /**
+     * @return GooglePlace
+     */
     public function setPermanentlyClosed()
     {
         $new = clone $this;

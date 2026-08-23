@@ -16,12 +16,13 @@ use Geocoder\Collection;
 use Geocoder\Exception\InvalidCredentials;
 use Geocoder\Exception\QuotaExceeded;
 use Geocoder\Exception\UnsupportedOperation;
-use Geocoder\Model\Address;
+use Geocoder\Http\Provider\AbstractHttpProvider;
+use Geocoder\Model\AddressBuilder;
 use Geocoder\Model\AddressCollection;
+use Geocoder\Provider\Pelias\Model\PeliasAddress;
+use Geocoder\Provider\Provider;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
-use Geocoder\Http\Provider\AbstractHttpProvider;
-use Geocoder\Provider\Provider;
 use Psr\Http\Client\ClientInterface;
 
 class Pelias extends AbstractHttpProvider implements Provider
@@ -32,11 +33,6 @@ class Pelias extends AbstractHttpProvider implements Provider
     protected $root;
 
     /**
-     * @var int
-     */
-    private $version;
-
-    /**
      * @param ClientInterface $client  an HTTP adapter
      * @param string          $root    url of Pelias API
      * @param int             $version version of Pelias API
@@ -44,16 +40,12 @@ class Pelias extends AbstractHttpProvider implements Provider
     public function __construct(ClientInterface $client, string $root, int $version = 1)
     {
         $this->root = sprintf('%s/v%d', rtrim($root, '/'), $version);
-        $this->version = $version;
 
         parent::__construct($client);
     }
 
     /**
-     * @param GeocodeQuery $query
-     * @param array        $query_data additional query data (API key for instance)
-     *
-     * @return string
+     * @param array<string, mixed> $query_data additional query data (API key for instance)
      *
      * @throws \Geocoder\Exception\Exception
      */
@@ -69,24 +61,20 @@ class Pelias extends AbstractHttpProvider implements Provider
         $data = [
             'text' => $address,
             'size' => $query->getLimit(),
+            'layers' => null !== $query->getData('layers') ? implode(',', $query->getData('layers')) : null,
+            'boundary.country' => null !== $query->getData('boundary.country') ? implode(',', $query->getData('boundary.country')) : null,
         ];
 
         return sprintf('%s/search?%s', $this->root, http_build_query(array_merge($data, $query_data)));
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function geocodeQuery(GeocodeQuery $query): Collection
     {
-        return $this->executeQuery($this->getGeocodeQueryUrl($query));
+        return $this->executeQuery($this->getGeocodeQueryUrl($query), $query->getLocale());
     }
 
     /**
-     * @param ReverseQuery $query
-     * @param array        $query_data additional query data (API key for instance)
-     *
-     * @return string
+     * @param array<string, mixed> $query_data additional query data (API key for instance)
      *
      * @throws \Geocoder\Exception\Exception
      */
@@ -100,35 +88,32 @@ class Pelias extends AbstractHttpProvider implements Provider
             'point.lat' => $latitude,
             'point.lon' => $longitude,
             'size' => $query->getLimit(),
+            'layers' => null !== $query->getData('layers') ? implode(',', $query->getData('layers')) : null,
+            'boundary.country' => null !== $query->getData('boundary.country') ? implode(',', $query->getData('boundary.country')) : null,
         ];
 
         return sprintf('%s/reverse?%s', $this->root, http_build_query(array_merge($data, $query_data)));
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function reverseQuery(ReverseQuery $query): Collection
     {
-        return $this->executeQuery($this->getReverseQueryUrl($query));
+        return $this->executeQuery($this->getReverseQueryUrl($query), $query->getLocale());
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return 'pelias';
     }
 
-    /**
-     * @param $url
-     *
-     * @return Collection
-     */
-    protected function executeQuery(string $url): AddressCollection
+    protected function executeQuery(string $url, ?string $locale = null): AddressCollection
     {
-        $content = $this->getUrlContents($url);
+        $headers = [];
+        if (null !== $locale) {
+            $headers['Accept-Language'] = $locale;
+        }
+
+        $request = $this->createRequest('GET', $url, $headers);
+        $content = $this->getParsedResponse($request);
         $json = json_decode($content, true);
 
         if (isset($json['meta'])) {
@@ -150,101 +135,101 @@ class Pelias extends AbstractHttpProvider implements Provider
             return new AddressCollection([]);
         }
 
-        $locations = $json['features'];
+        $features = $json['features'];
 
-        if (empty($locations)) {
+        if (empty($features)) {
             return new AddressCollection([]);
         }
 
         $results = [];
-        foreach ($locations as $location) {
-            if (isset($location['bbox'])) {
-                $bounds = [
-                    'south' => $location['bbox'][3],
-                    'west' => $location['bbox'][2],
-                    'north' => $location['bbox'][1],
-                    'east' => $location['bbox'][0],
-                ];
-            } else {
-                $bounds = [
-                    'south' => null,
-                    'west' => null,
-                    'north' => null,
-                    'east' => null,
-                ];
+        foreach ($features as $feature) {
+            $builder = new AddressBuilder($this->getName());
+            $builder->setCoordinates($feature['geometry']['coordinates'][1], $feature['geometry']['coordinates'][0]);
+            $builder->setStreetNumber($feature['properties']['housenumber'] ?? null);
+            $builder->setStreetName($this->guessStreetName($feature['properties']));
+            $builder->setSubLocality($this->guessSubLocality($feature['properties']));
+            $builder->setLocality($this->guessLocality($feature['properties']));
+            $builder->setPostalCode($feature['properties']['postalcode'] ?? null);
+            $builder->setCountry($feature['properties']['country'] ?? null);
+            $builder->setCountryCode(
+                isset($feature['properties']['country_code']) ? strtoupper($feature['properties']['country_code']) :
+                (isset($feature['properties']['country_a']) ? strtoupper($feature['properties']['country_a']) : null));
+            $builder->setTimezone($feature['properties']['timezone'] ?? null);
+
+            if (isset($feature['bbox'])) {
+                $builder->setBounds($feature['bbox'][3], $feature['bbox'][2], $feature['bbox'][1], $feature['bbox'][0]);
             }
 
-            $props = $location['properties'];
-
-            $adminLevels = [];
-            foreach (['region', 'county', 'locality', 'macroregion', 'country'] as $i => $component) {
-                if (isset($props[$component])) {
-                    $adminLevels[] = ['name' => $props[$component], 'level' => $i + 1];
+            $level = 1;
+            foreach (['macroregion', 'region', 'macrocounty', 'county', 'locality', 'localadmin', 'borough'] as $component) {
+                if (isset($feature['properties'][$component])) {
+                    $builder->addAdminLevel($level++, $feature['properties'][$component], $feature['properties'][$component.'_a'] ?? null);
+                }
+                // Administrative level should be an integer in [1,5].
+                if ($level > 5) {
+                    break;
                 }
             }
 
-            $results[] = Address::createFromArray([
-                'providedBy' => $this->getName(),
-                'latitude' => $location['geometry']['coordinates'][1],
-                'longitude' => $location['geometry']['coordinates'][0],
-                'bounds' => $bounds,
-                'streetNumber' => isset($props['housenumber']) ? $props['housenumber'] : null,
-                'streetName' => isset($props['street']) ? $props['street'] : null,
-                'subLocality' => isset($props['neighbourhood']) ? $props['neighbourhood'] : null,
-                'locality' => isset($props['locality']) ? $props['locality'] : null,
-                'postalCode' => isset($props['postalcode']) ? $props['postalcode'] : null,
-                'adminLevels' => $adminLevels,
-                'country' => isset($props['country']) ? $props['country'] : null,
-                'countryCode' => isset($props['country_a']) ? strtoupper($props['country_a']) : null,
-            ]);
+            /** @var PeliasAddress $location */
+            $location = $builder->build(PeliasAddress::class);
+
+            $location = $location->withId($feature['properties']['id'] ?? null);
+            $location = $location->withLayer($feature['properties']['layer'] ?? null);
+            $location = $location->withSource($feature['properties']['source'] ?? null);
+            $location = $location->withName($feature['properties']['name'] ?? null);
+            $location = $location->withConfidence($feature['properties']['confidence'] ?? null);
+            $location = $location->withAccuracy($feature['properties']['accuracy'] ?? null);
+
+            $results[] = $location;
         }
 
         return new AddressCollection($results);
     }
 
     /**
-     * @param array $components
+     * @param array<string, mixed> $components
      *
      * @return string|null
      */
-    protected function guessLocality(array $components)
+    protected static function guessLocality(array $components)
     {
-        $localityKeys = ['city', 'town', 'village', 'hamlet'];
+        $localityKeys = ['locality', 'localadmin', 'city', 'town', 'village', 'hamlet'];
 
-        return $this->guessBestComponent($components, $localityKeys);
+        return self::guessBestComponent($components, $localityKeys);
     }
 
     /**
-     * @param array $components
+     * @param array<string, mixed> $components
      *
      * @return string|null
      */
-    protected function guessStreetName(array $components)
-    {
-        $streetNameKeys = ['road', 'street', 'street_name', 'residential'];
-
-        return $this->guessBestComponent($components, $streetNameKeys);
-    }
-
-    /**
-     * @param array $components
-     *
-     * @return string|null
-     */
-    protected function guessSubLocality(array $components)
+    protected static function guessSubLocality(array $components)
     {
         $subLocalityKeys = ['neighbourhood', 'city_district'];
 
-        return $this->guessBestComponent($components, $subLocalityKeys);
+        return self::guessBestComponent($components, $subLocalityKeys);
     }
 
     /**
-     * @param array $components
-     * @param array $keys
+     * @param array<string, mixed> $components
      *
      * @return string|null
      */
-    protected function guessBestComponent(array $components, array $keys)
+    protected static function guessStreetName(array $components)
+    {
+        $streetNameKeys = ['road', 'street', 'street_name', 'residential'];
+
+        return self::guessBestComponent($components, $streetNameKeys);
+    }
+
+    /**
+     * @param array<string, mixed> $components
+     * @param string[]             $keys
+     *
+     * @return string|null
+     */
+    protected static function guessBestComponent(array $components, array $keys)
     {
         foreach ($keys as $key) {
             if (isset($components[$key]) && !empty($components[$key])) {

@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace Geocoder\Provider\GeoIP2\Tests;
 
 use Geocoder\Provider\GeoIP2\GeoIP2Adapter;
-use RuntimeException;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -27,14 +27,12 @@ class GeoIP2AdapterTest extends TestCase
     protected $adapter;
 
     /**
-     * {@inheritdoc}
-     *
-     * @throws RuntimeException
+     * @throws \RuntimeException
      */
     public static function setUpBeforeClass(): void
     {
-        if (false === class_exists('\GeoIp2\Database\Reader')) {
-            throw new RuntimeException("The maxmind's lib 'geoip2/geoip2' is required to run this test.");
+        if (false === class_exists(\GeoIp2\Database\Reader::class)) {
+            throw new \RuntimeException("The maxmind's lib 'geoip2/geoip2' is required to run this test.");
         }
     }
 
@@ -43,13 +41,13 @@ class GeoIP2AdapterTest extends TestCase
         $this->adapter = new GeoIP2Adapter($this->getGeoIP2ProviderMock());
     }
 
-    public function testGetName()
+    public function testGetName(): void
     {
         $expectedName = 'maxmind_geoip2';
         $this->assertEquals($expectedName, $this->adapter->getName());
     }
 
-    public function testGetContentMustBeCalledWithUrl()
+    public function testGetContentMustBeCalledWithUrl(): void
     {
         $this->expectException(\Geocoder\Exception\InvalidArgument::class);
         $this->expectExceptionMessage('must be called with a valid url. Got "127.0.0.1" instead.');
@@ -58,7 +56,7 @@ class GeoIP2AdapterTest extends TestCase
         $this->adapter->getContent($url);
     }
 
-    public function testAddressPassedToReaderMustBeIpAddress()
+    public function testAddressPassedToReaderMustBeIpAddress(): void
     {
         $this->expectException(\Geocoder\Exception\InvalidArgument::class);
         $this->expectExceptionMessage('URL must contain a valid query-string (an IP address, 127.0.0.1 for instance)');
@@ -67,7 +65,10 @@ class GeoIP2AdapterTest extends TestCase
         $this->adapter->getContent($url);
     }
 
-    public static function provideDataForSwitchingRequestMethods()
+    /**
+     * @return array<string[]>
+     */
+    public static function provideDataForSwitchingRequestMethods(): array
     {
         return [
             [GeoIP2Adapter::GEOIP2_MODEL_CITY],
@@ -78,22 +79,20 @@ class GeoIP2AdapterTest extends TestCase
     /**
      * @dataProvider provideDataForSwitchingRequestMethods
      */
-    public function testIpAddressIsPassedCorrectToReader($geoIp2Model)
+    public function testIpAddressIsPassedCorrectToReader(string $geoIp2Model): void
     {
         $geoIp2Provider = $this->getGeoIP2ProviderMock();
         $geoIp2Provider
             ->expects($this->once())
             ->method($geoIp2Model)
             ->with('127.0.0.1')
-            ->will($this->returnValue(
-                $this->getGeoIP2ModelMock($geoIp2Model)
-            ));
+            ->willReturn($this->getGeoIP2ModelMock($geoIp2Model));
 
         $adapter = new GeoIP2Adapter($geoIp2Provider, $geoIp2Model);
         $adapter->getContent('file://geoip?127.0.0.1');
     }
 
-    public function testNotSupportedGeoIP2ModelLeadsToException()
+    public function testNotSupportedGeoIP2ModelLeadsToException(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('Model "unsupported_model" is not available.');
@@ -101,7 +100,7 @@ class GeoIP2AdapterTest extends TestCase
         new GeoIP2Adapter($this->getGeoIP2ProviderMock(), 'unsupported_model');
     }
 
-    public function testReaderResponseIsJsonEncoded()
+    public function testReaderResponseIsJsonEncoded(): void
     {
         $cityModel = $this->getGeoIP2ModelMock(GeoIP2Adapter::GEOIP2_MODEL_CITY);
 
@@ -109,7 +108,7 @@ class GeoIP2AdapterTest extends TestCase
         $geoIp2Provider
             ->expects($this->any())
             ->method('city')
-            ->will($this->returnValue($cityModel));
+            ->willReturn($cityModel);
 
         $adapter = new GeoIP2Adapter($geoIp2Provider);
 
@@ -117,49 +116,48 @@ class GeoIP2AdapterTest extends TestCase
         $this->assertJson($result);
 
         $decodedResult = json_decode($result);
-        $this->assertObjectHasAttribute('city', $decodedResult);
+        $this->assertObjectHasProperty('city', $decodedResult);
     }
 
     /**
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     * @return MockObject
      */
     protected function getGeoIP2ProviderMock()
     {
-        $mock = $this->getMockBuilder('\GeoIp2\ProviderInterface')->getMock();
+        $mock = $this->getMockBuilder(\GeoIp2\ProviderInterface::class)->getMock();
 
         return $mock;
     }
 
     /**
-     * @param int $geoIP2Model (e.g. GeoIP2Adapter::GEOIP2_MODEL_CITY, ...)
+     * @param string $geoIP2Model (e.g. GeoIP2Adapter::GEOIP2_MODEL_CITY, ...)
      *
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     * @return MockObject
      */
     protected function getGeoIP2ModelMock($geoIP2Model)
     {
+        /** @var class-string $mockClass */
         $mockClass = '\\GeoIp2\\Model\\'.ucfirst($geoIP2Model);
 
         $mock = $this->getMockBuilder($mockClass)->disableOriginalConstructor()->getMock();
         $mock
             ->expects($this->any())
             ->method('jsonSerialize')
-            ->will($this->returnValue(
-                [
-                    'city' => [
-                        'geoname_id' => 2911298,
-                        'names' => [
-                              'de' => 'Hamburg',
-                              'en' => 'Hamburg',
-                              'es' => 'Hamburgo',
-                              'fr' => 'Hambourg',
-                              'ja' => 'ハンブルク',
-                              'pt-BR' => 'Hamburgo',
-                              'ru' => 'Гамбург',
-                              'zh-CN' => '汉堡市',
-                        ],
+            ->willReturn([
+                'city' => [
+                    'geoname_id' => 2911298,
+                    'names' => [
+                        'de' => 'Hamburg',
+                        'en' => 'Hamburg',
+                        'es' => 'Hamburgo',
+                        'fr' => 'Hambourg',
+                        'ja' => 'ハンブルク',
+                        'pt-BR' => 'Hamburgo',
+                        'ru' => 'Гамбург',
+                        'zh-CN' => '汉堡市',
                     ],
-                ]
-            ));
+                ],
+            ]);
 
         return $mock;
     }

@@ -42,21 +42,13 @@ class CachePlugin implements Plugin
      */
     private $precision;
 
-    /**
-     * @param CacheInterface $cache
-     * @param int|null       $lifetime
-     * @param int|null       $precision
-     */
-    public function __construct(CacheInterface $cache, int $lifetime = null, int $precision = null)
+    public function __construct(CacheInterface $cache, ?int $lifetime = null, ?int $precision = null)
     {
         $this->cache = $cache;
         $this->lifetime = $lifetime;
         $this->precision = $precision;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function handleQuery(Query $query, callable $next, callable $first)
     {
         $cacheKey = $this->getCacheKey($query);
@@ -70,17 +62,12 @@ class CachePlugin implements Plugin
         return $result;
     }
 
-    /**
-     * @param Query $query
-     *
-     * @return string
-     */
     private function getCacheKey(Query $query): string
     {
         if (null !== $this->precision && $query instanceof ReverseQuery) {
             $query = $query->withCoordinates(new Coordinates(
-                number_format($query->getCoordinates()->getLatitude(), $this->precision),
-                number_format($query->getCoordinates()->getLongitude(), $this->precision)
+                (float) number_format($query->getCoordinates()->getLatitude(), $this->precision),
+                (float) number_format($query->getCoordinates()->getLongitude(), $this->precision)
             ));
         }
 

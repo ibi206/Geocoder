@@ -13,7 +13,6 @@ declare(strict_types=1);
 namespace Geocoder\Plugin\Tests\Plugin;
 
 use Cache\Adapter\Void\VoidCachePool;
-use Generator;
 use Geocoder\Model\Coordinates;
 use Geocoder\Plugin\Plugin\CachePlugin;
 use Geocoder\Query\GeocodeQuery;
@@ -23,15 +22,12 @@ use PHPUnit\Framework\TestCase;
 
 class CachePluginTest extends TestCase
 {
-    public function testPluginMiss()
+    public function testPluginMiss(): void
     {
         $ttl = 4711;
         $query = GeocodeQuery::create('foo');
         $queryString = sha1($query->__toString());
-        $cache = $this->getMockBuilder(VoidCachePool::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['get', 'set'])
-            ->getMock();
+        $cache = $this->createPartialMock(VoidCachePool::class, ['get', 'set']);
 
         $cache->expects($this->once())
             ->method('get')
@@ -53,7 +49,7 @@ class CachePluginTest extends TestCase
         $this->assertEquals('result', $plugin->handleQuery($query, $next, $first));
     }
 
-    public function getQueryProvider(): Generator
+    public function getQueryProvider(): \Generator
     {
         $query = GeocodeQuery::create('foo');
         $key = sha1($query->__toString());
@@ -68,12 +64,9 @@ class CachePluginTest extends TestCase
     /**
      * @dataProvider getQueryProvider
      */
-    public function testPluginHit(Query $query, string $key)
+    public function testPluginHit(Query $query, string $key): void
     {
-        $cache = $this->getMockBuilder(VoidCachePool::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['get', 'set'])
-            ->getMock();
+        $cache = $this->createPartialMock(VoidCachePool::class, ['get', 'set']);
 
         $cache->expects($this->once())
             ->method('get')

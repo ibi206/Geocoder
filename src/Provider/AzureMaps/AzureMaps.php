@@ -15,13 +15,13 @@ namespace Geocoder\Provider\AzureMaps;
 use Geocoder\Collection;
 use Geocoder\Exception\InvalidServerResponse;
 use Geocoder\Http\Provider\AbstractHttpProvider;
+use Geocoder\Location;
 use Geocoder\Model\AddressBuilder;
 use Geocoder\Model\AddressCollection;
 use Geocoder\Provider\Provider;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
 use Psr\Http\Client\ClientInterface;
-use stdClass;
 
 /**
  * @author Max Langerman <max@langerman.io>
@@ -31,15 +31,15 @@ class AzureMaps extends AbstractHttpProvider implements Provider
     /**
      * @var string
      */
-    const GEOCODE_ENDPOINT_SSL = 'https://atlas.microsoft.com/search/address';
+    public const GEOCODE_ENDPOINT_SSL = 'https://atlas.microsoft.com/search/address';
 
     /**
      * @var string
      */
-    const REVERSE_ENDPOINT_URL = 'https://atlas.microsoft.com/search/address/reverse';
+    public const REVERSE_ENDPOINT_URL = 'https://atlas.microsoft.com/search/address/reverse';
 
     /**
-     * @var array
+     * @var array<string, mixed>
      */
     private $options = [
         'typeahead' => null,
@@ -67,12 +67,14 @@ class AzureMaps extends AbstractHttpProvider implements Provider
 
     /**
      * AzureMaps constructor.
+     *
+     * @param array<string, mixed> $options
      */
     public function __construct(
         ClientInterface $client,
         string $subscriptionKey,
         array $options = [],
-        string $format = 'json'
+        string $format = 'json',
     ) {
         parent::__construct($client);
 
@@ -124,6 +126,8 @@ class AzureMaps extends AbstractHttpProvider implements Provider
 
     /**
      * Returns an array of non null geocode /reverse-geocode options.
+     *
+     * @param array<string, mixed> $options
      */
     private function setOptions(array $options): void
     {
@@ -136,6 +140,8 @@ class AzureMaps extends AbstractHttpProvider implements Provider
 
     /**
      * Returns an array of keys to replace.
+     *
+     * @return array<string, mixed>
      */
     public function getOptions(): array
     {
@@ -178,7 +184,7 @@ class AzureMaps extends AbstractHttpProvider implements Provider
         );
     }
 
-    private function validateResponse(string $content, string $url): stdClass
+    private function validateResponse(string $content, string $url): \stdClass
     {
         $response = json_decode($content);
 
@@ -193,7 +199,10 @@ class AzureMaps extends AbstractHttpProvider implements Provider
         return $response;
     }
 
-    private function formatGeocodeResponse(stdClass $response): array
+    /**
+     * @return Location[]
+     */
+    private function formatGeocodeResponse(\stdClass $response): array
     {
         return array_map(function ($result) {
             $builder = new AddressBuilder($this->getName());
@@ -216,12 +225,16 @@ class AzureMaps extends AbstractHttpProvider implements Provider
             $builder->setCountryCode($result->address->countryCode ?? null);
             $builder->setCountry($result->address->country ?? null);
             $builder->setPostalCode($result->address->extendedPostalCode ?? null);
+            $builder->setLocality($result->address->municipality ?? null);
 
             return $builder->build();
         }, $response->results);
     }
 
-    private function formatReverseGeocodeResponse(stdClass $response): array
+    /**
+     * @return Location[]
+     */
+    private function formatReverseGeocodeResponse(\stdClass $response): array
     {
         return array_filter(array_map(function ($address) {
             $coordinates = explode(',', $address->position);
@@ -238,12 +251,12 @@ class AzureMaps extends AbstractHttpProvider implements Provider
             $east = array_shift($northEast);
 
             $builder = new AddressBuilder($this->getName());
-            $builder->setCoordinates($latitude, $longitude);
+            $builder->setCoordinates((float) $latitude, (float) $longitude);
             $builder->setBounds(
-                $south,
-                $west,
-                $north,
-                $east
+                (float) $south,
+                (float) $west,
+                (float) $north,
+                (float) $east
             );
 
             $builder->setStreetName($address->address->streetName ?? null);

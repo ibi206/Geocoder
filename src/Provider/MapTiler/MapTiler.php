@@ -15,14 +15,14 @@ namespace Geocoder\Provider\MapTiler;
 use Geocoder\Collection;
 use Geocoder\Exception\InvalidServerResponse;
 use Geocoder\Exception\UnsupportedOperation;
+use Geocoder\Http\Provider\AbstractHttpProvider;
 use Geocoder\Location;
 use Geocoder\Model\AddressBuilder;
 use Geocoder\Model\AddressCollection;
-use Geocoder\Query\GeocodeQuery;
-use Geocoder\Query\ReverseQuery;
-use Geocoder\Http\Provider\AbstractHttpProvider;
 use Geocoder\Model\Bounds;
 use Geocoder\Provider\Provider;
+use Geocoder\Query\GeocodeQuery;
+use Geocoder\Query\ReverseQuery;
 use Psr\Http\Client\ClientInterface;
 
 /**
@@ -33,7 +33,7 @@ final class MapTiler extends AbstractHttpProvider implements Provider
     /**
      * @var string
      */
-    const ENDPOINT_URL = 'https://api.maptiler.com/geocoding/%s.json?key=%s';
+    public const ENDPOINT_URL = 'https://api.maptiler.com/geocoding/%s.json?key=%s';
 
     /**
      * @var string
@@ -42,7 +42,7 @@ final class MapTiler extends AbstractHttpProvider implements Provider
 
     /**
      * @param ClientInterface $client an HTTP client
-     * @param string          $key    API key
+     * @param string          $apiKey API key
      */
     public function __construct(ClientInterface $client, string $apiKey)
     {
@@ -51,9 +51,6 @@ final class MapTiler extends AbstractHttpProvider implements Provider
         $this->apiKey = $apiKey;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function geocodeQuery(GeocodeQuery $query): Collection
     {
         $address = $query->getText();
@@ -79,9 +76,6 @@ final class MapTiler extends AbstractHttpProvider implements Provider
         return new AddressCollection($results);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function reverseQuery(ReverseQuery $query): Collection
     {
         $coordinates = $query->getCoordinates();
@@ -102,11 +96,6 @@ final class MapTiler extends AbstractHttpProvider implements Provider
         return new AddressCollection($results);
     }
 
-    /**
-     * @param \stdClass $feature
-     *
-     * @return Location
-     */
     private function featureToAddress(\stdClass $feature): Location
     {
         $builder = new AddressBuilder($this->getName());
@@ -132,6 +121,9 @@ final class MapTiler extends AbstractHttpProvider implements Provider
         return $builder->build();
     }
 
+    /**
+     * @param array<string, \stdClass> $context
+     */
     private function extractFromContext(AddressBuilder &$builder, array $context): AddressBuilder
     {
         $cityContext = array_filter($context, function ($c) { return 1 === preg_match('/^city\.\d+$/', $c->id); });
@@ -149,20 +141,12 @@ final class MapTiler extends AbstractHttpProvider implements Provider
         return $builder;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return 'maptiler';
     }
 
-    /**
-     * @param string $url
-     *
-     * @return \stdClass
-     */
-    private function executeQuery(string $url, string $locale = null, Bounds $bounds = null): \stdClass
+    private function executeQuery(string $url, ?string $locale = null, ?Bounds $bounds = null): \stdClass
     {
         $url .= '&'.http_build_query([
             'language' => $locale,

@@ -24,16 +24,13 @@ use PHPUnit\Framework\TestCase;
 
 class PluginProviderTest extends TestCase
 {
-    public function testDispatchQueries()
+    public function testDispatchQueries(): void
     {
         $geocodeQuery = GeocodeQuery::create('foo');
         $reverseQuery = ReverseQuery::fromCoordinates(47, 11);
         $collection = new AddressCollection([]);
 
-        $provider = $this->getMockBuilder(Provider::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['geocodeQuery', 'reverseQuery', 'getName'])
-            ->getMock();
+        $provider = $this->createPartialMock(Provider::class, ['geocodeQuery', 'reverseQuery', 'getName']);
         $provider->expects($this->once())
             ->method('geocodeQuery')
             ->with($geocodeQuery)
@@ -49,15 +46,12 @@ class PluginProviderTest extends TestCase
         $this->assertSame($collection, $pluginProvider->reverseQuery($reverseQuery));
     }
 
-    public function testPluginsIsBeingUsedWhenGeocoding()
+    public function testPluginsIsBeingUsedWhenGeocoding(): void
     {
         $geocodeQuery = GeocodeQuery::create('foo');
         $collection = new AddressCollection([]);
 
-        $provider = $this->getMockBuilder(Provider::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['geocodeQuery', 'reverseQuery', 'getName'])
-            ->getMock();
+        $provider = $this->createPartialMock(Provider::class, ['geocodeQuery', 'reverseQuery', 'getName']);
         $provider->expects($this->once())
             ->method('geocodeQuery')
             ->with($geocodeQuery)
@@ -65,10 +59,7 @@ class PluginProviderTest extends TestCase
         $provider->expects($this->never())->method('reverseQuery');
         $provider->expects($this->never())->method('getName');
 
-        $pluginA = $this->getMockBuilder(Plugin::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['handleQuery'])
-            ->getMock();
+        $pluginA = $this->createPartialMock(Plugin::class, ['handleQuery']);
         $pluginA->expects($this->once())
             ->method('handleQuery')
             ->with($geocodeQuery, $this->isType('callable'), $this->isType('callable'))
@@ -80,15 +71,12 @@ class PluginProviderTest extends TestCase
         $this->assertSame($collection, $pluginProvider->geocodeQuery($geocodeQuery));
     }
 
-    public function testPluginsIsBeingUsedWhenReverse()
+    public function testPluginsIsBeingUsedWhenReverse(): void
     {
         $reverseQuery = ReverseQuery::fromCoordinates(47, 11);
         $collection = new AddressCollection([]);
 
-        $provider = $this->getMockBuilder(Provider::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['geocodeQuery', 'reverseQuery', 'getName'])
-            ->getMock();
+        $provider = $this->createPartialMock(Provider::class, ['geocodeQuery', 'reverseQuery', 'getName']);
         $provider->expects($this->never())->method('geocodeQuery');
         $provider->expects($this->never())->method('getName');
         $provider->expects($this->once())
@@ -96,10 +84,7 @@ class PluginProviderTest extends TestCase
             ->with($reverseQuery)
             ->willReturn($collection);
 
-        $pluginA = $this->getMockBuilder(Plugin::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['handleQuery'])
-            ->getMock();
+        $pluginA = $this->createPartialMock(Plugin::class, ['handleQuery']);
         $pluginA->expects($this->once())
             ->method('handleQuery')
             ->with($reverseQuery, $this->isType('callable'), $this->isType('callable'))
@@ -111,33 +96,24 @@ class PluginProviderTest extends TestCase
         $this->assertSame($collection, $pluginProvider->reverseQuery($reverseQuery));
     }
 
-    public function testLoopException()
+    public function testLoopException(): void
     {
         $this->expectException(LoopException::class);
         $geocodeQuery = GeocodeQuery::create('foo');
 
-        $provider = $this->getMockBuilder(Provider::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['geocodeQuery', 'reverseQuery', 'getName'])
-            ->getMock();
+        $provider = $this->createPartialMock(Provider::class, ['geocodeQuery', 'reverseQuery', 'getName']);
         $provider->expects($this->never())->method('geocodeQuery');
         $provider->expects($this->never())->method('reverseQuery');
         $provider->expects($this->never())->method('getName');
 
-        $pluginA = $this->getMockBuilder(Plugin::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['handleQuery'])
-            ->getMock();
+        $pluginA = $this->createPartialMock(Plugin::class, ['handleQuery']);
         $pluginA->expects($this->any())
             ->method('handleQuery')
             ->with($geocodeQuery, $this->isType('callable'), $this->isType('callable'))
             ->willReturnCallback(function (Query $query, callable $next, callable $first) {
                 return $next($query);
             });
-        $pluginB = $this->getMockBuilder(Plugin::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['handleQuery'])
-            ->getMock();
+        $pluginB = $this->createPartialMock(Plugin::class, ['handleQuery']);
         $pluginB->expects($this->any())
             ->method('handleQuery')
             ->with($geocodeQuery, $this->isType('callable'), $this->isType('callable'))

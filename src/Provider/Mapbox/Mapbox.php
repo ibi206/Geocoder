@@ -16,13 +16,13 @@ use Geocoder\Collection;
 use Geocoder\Exception\InvalidArgument;
 use Geocoder\Exception\InvalidServerResponse;
 use Geocoder\Exception\UnsupportedOperation;
-use Geocoder\Model\AddressCollection;
-use Geocoder\Model\AddressBuilder;
-use Geocoder\Query\GeocodeQuery;
-use Geocoder\Query\ReverseQuery;
 use Geocoder\Http\Provider\AbstractHttpProvider;
+use Geocoder\Model\AddressBuilder;
+use Geocoder\Model\AddressCollection;
 use Geocoder\Provider\Mapbox\Model\MapboxAddress;
 use Geocoder\Provider\Provider;
+use Geocoder\Query\GeocodeQuery;
+use Geocoder\Query\ReverseQuery;
 use Psr\Http\Client\ClientInterface;
 
 final class Mapbox extends AbstractHttpProvider implements Provider
@@ -30,27 +30,27 @@ final class Mapbox extends AbstractHttpProvider implements Provider
     /**
      * @var string
      */
-    const GEOCODE_ENDPOINT_URL_SSL = 'https://api.mapbox.com/geocoding/v5/%s/%s.json';
+    public const GEOCODE_ENDPOINT_URL_SSL = 'https://api.mapbox.com/geocoding/v5/%s/%s.json';
 
     /**
      * @var string
      */
-    const REVERSE_ENDPOINT_URL_SSL = 'https://api.mapbox.com/geocoding/v5/%s/%F,%F.json';
+    public const REVERSE_ENDPOINT_URL_SSL = 'https://api.mapbox.com/geocoding/v5/%s/%F,%F.json';
 
     /**
      * @var string
      */
-    const GEOCODING_MODE_PLACES = 'mapbox.places';
+    public const GEOCODING_MODE_PLACES = 'mapbox.places';
 
     /**
      * @var string
      */
-    const GEOCODING_MODE_PLACES_PERMANENT = 'mapbox.places-permanent';
+    public const GEOCODING_MODE_PLACES_PERMANENT = 'mapbox.places-permanent';
 
     /**
-     * @var array
+     * @var string[]
      */
-    const GEOCODING_MODES = [
+    public const GEOCODING_MODES = [
         self::GEOCODING_MODE_PLACES,
         self::GEOCODING_MODE_PLACES_PERMANENT,
     ];
@@ -58,57 +58,57 @@ final class Mapbox extends AbstractHttpProvider implements Provider
     /**
      * @var string
      */
-    const TYPE_COUNTRY = 'country';
+    public const TYPE_COUNTRY = 'country';
 
     /**
      * @var string
      */
-    const TYPE_REGION = 'region';
+    public const TYPE_REGION = 'region';
 
     /**
      * @var string
      */
-    const TYPE_POSTCODE = 'postcode';
+    public const TYPE_POSTCODE = 'postcode';
 
     /**
      * @var string
      */
-    const TYPE_DISTRICT = 'district';
+    public const TYPE_DISTRICT = 'district';
 
     /**
      * @var string
      */
-    const TYPE_PLACE = 'place';
+    public const TYPE_PLACE = 'place';
 
     /**
      * @var string
      */
-    const TYPE_LOCALITY = 'locality';
+    public const TYPE_LOCALITY = 'locality';
 
     /**
      * @var string
      */
-    const TYPE_NEIGHBORHOOD = 'neighborhood';
+    public const TYPE_NEIGHBORHOOD = 'neighborhood';
 
     /**
      * @var string
      */
-    const TYPE_ADDRESS = 'address';
+    public const TYPE_ADDRESS = 'address';
 
     /**
      * @var string
      */
-    const TYPE_POI = 'poi';
+    public const TYPE_POI = 'poi';
 
     /**
      * @var string
      */
-    const TYPE_POI_LANDMARK = 'poi.landmark';
+    public const TYPE_POI_LANDMARK = 'poi.landmark';
 
     /**
-     * @var array
+     * @var string[]
      */
-    const TYPES = [
+    public const TYPES = [
         self::TYPE_COUNTRY,
         self::TYPE_REGION,
         self::TYPE_POSTCODE,
@@ -121,12 +121,10 @@ final class Mapbox extends AbstractHttpProvider implements Provider
         self::TYPE_POI_LANDMARK,
     ];
 
-    const DEFAULT_TYPE = self::TYPE_ADDRESS;
-
     /**
-     * @var ClientInterface
+     * @var string
      */
-    private $client;
+    public const DEFAULT_TYPE = self::TYPE_ADDRESS;
 
     /**
      * @var string
@@ -144,16 +142,14 @@ final class Mapbox extends AbstractHttpProvider implements Provider
     private $geocodingMode;
 
     /**
-     * @param ClientInterface $client        An HTTP adapter
-     * @param string          $accessToken   Your Mapbox access token
-     * @param string|null     $country
-     * @param string          $geocodingMode
+     * @param ClientInterface $client      An HTTP adapter
+     * @param string          $accessToken Your Mapbox access token
      */
     public function __construct(
         ClientInterface $client,
         string $accessToken,
-        string $country = null,
-        string $geocodingMode = self::GEOCODING_MODE_PLACES
+        ?string $country = null,
+        string $geocodingMode = self::GEOCODING_MODE_PLACES,
     ) {
         parent::__construct($client);
 
@@ -161,7 +157,6 @@ final class Mapbox extends AbstractHttpProvider implements Provider
             throw new InvalidArgument('The Mapbox geocoding mode should be either mapbox.places or mapbox.places-permanent.');
         }
 
-        $this->client = $client;
         $this->accessToken = $accessToken;
         $this->country = $country;
         $this->geocodingMode = $geocodingMode;
@@ -199,7 +194,7 @@ final class Mapbox extends AbstractHttpProvider implements Provider
             $urlParameters['fuzzyMatch'] = $fuzzyMatch ? 'true' : 'false';
         }
 
-        if ($urlParameters) {
+        if (count($urlParameters) > 0) {
             $url .= '?'.http_build_query($urlParameters);
         }
 
@@ -222,30 +217,22 @@ final class Mapbox extends AbstractHttpProvider implements Provider
             $urlParameters['types'] = self::DEFAULT_TYPE;
         }
 
-        if ($urlParameters) {
+        if (count($urlParameters) > 0) {
             $url .= '?'.http_build_query($urlParameters);
         }
 
         return $this->fetchUrl($url, $query->getLimit(), $query->getLocale(), $query->getData('country', $this->country));
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return 'mapbox';
     }
 
     /**
-     * @param string      $url
-     * @param int         $limit
-     * @param string|null $locale
-     * @param string|null $country
-     *
      * @return string query with extra params
      */
-    private function buildQuery(string $url, int $limit, string $locale = null, string $country = null): string
+    private function buildQuery(string $url, int $limit, ?string $locale = null, ?string $country = null): string
     {
         $parameters = array_filter([
             'country' => $country,
@@ -259,15 +246,7 @@ final class Mapbox extends AbstractHttpProvider implements Provider
         return $url.$separator.http_build_query($parameters);
     }
 
-    /**
-     * @param string      $url
-     * @param int         $limit
-     * @param string|null $locale
-     * @param string|null $country
-     *
-     * @return AddressCollection
-     */
-    private function fetchUrl(string $url, int $limit, string $locale = null, string $country = null): AddressCollection
+    private function fetchUrl(string $url, int $limit, ?string $locale = null, ?string $country = null): AddressCollection
     {
         $url = $this->buildQuery($url, $limit, $locale, $country);
         $content = $this->getUrlContents($url);
@@ -329,11 +308,10 @@ final class Mapbox extends AbstractHttpProvider implements Provider
     /**
      * Update current resultSet with given key/value.
      *
-     * @param AddressBuilder $builder
-     * @param string         $type    Component type
-     * @param array          $value   The component value
+     * @param string               $type  Component type
+     * @param array<string, mixed> $value Component value
      */
-    private function updateAddressComponent(AddressBuilder $builder, string $type, array $value)
+    private function updateAddressComponent(AddressBuilder $builder, string $type, array $value): void
     {
         $typeParts = explode('.', $type);
         $type = reset($typeParts);
@@ -384,12 +362,9 @@ final class Mapbox extends AbstractHttpProvider implements Provider
     /**
      * Decode the response content and validate it to make sure it does not have any errors.
      *
-     * @param string $url
-     * @param string $content
-     *
-     * @return array
+     * @return array<string, mixed>
      */
-    private function validateResponse(string $url, $content): array
+    private function validateResponse(string $url, string $content): array
     {
         $json = json_decode($content, true);
 
@@ -404,10 +379,9 @@ final class Mapbox extends AbstractHttpProvider implements Provider
     /**
      * Parse coordinats and bounds.
      *
-     * @param AddressBuilder $builder
-     * @param array          $result
+     * @param array<string, mixed> $result
      */
-    private function parseCoordinates(AddressBuilder $builder, array $result)
+    private function parseCoordinates(AddressBuilder $builder, array $result): void
     {
         $coordinates = $result['geometry']['coordinates'];
         $builder->setCoordinates($coordinates[1], $coordinates[0]);

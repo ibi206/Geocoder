@@ -14,27 +14,27 @@ namespace Geocoder\Provider\Mapzen\Tests;
 
 use Geocoder\Collection;
 use Geocoder\IntegrationTest\BaseTestCase;
+use Geocoder\Provider\Mapzen\Mapzen;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
-use Geocoder\Provider\Mapzen\Mapzen;
 
 /**
  * @author Gary Gale <gary@vicchi.org>
  */
 class MapzenTest extends BaseTestCase
 {
-    protected function getCacheDir()
+    protected function getCacheDir(): string
     {
         return __DIR__.'/.cached_responses';
     }
 
-    public function testGetName()
+    public function testGetName(): void
     {
         $provider = new Mapzen($this->getMockedHttpClient(), 'api_key');
         $this->assertEquals('mapzen', $provider->getName());
     }
 
-    public function testGeocode()
+    public function testGeocode(): void
     {
         $provider = new Mapzen($this->getMockedHttpClient('{}'), 'api_key');
         $result = $provider->geocodeQuery(GeocodeQuery::create('foobar'));
@@ -43,16 +43,16 @@ class MapzenTest extends BaseTestCase
         $this->assertEquals(0, $result->count());
     }
 
-    public function testSslSchema()
+    public function testSslSchema(): void
     {
-        $provider = new Mapzen($this->getMockedHttpClient('{}'), 'api_key', true);
+        $provider = new Mapzen($this->getMockedHttpClient('{}'), 'api_key');
         $result = $provider->geocodeQuery(GeocodeQuery::create('foobar'));
 
         $this->assertInstanceOf(Collection::class, $result);
         $this->assertEquals(0, $result->count());
     }
 
-    public function testGeocodeWithRealAddress()
+    public function testGeocodeWithRealAddress(): void
     {
         if (!isset($_SERVER['MAPZEN_API_KEY'])) {
             $this->markTestSkipped('You need to configure the MAPZEN_API_KEY value in phpunit.xml');
@@ -61,12 +61,12 @@ class MapzenTest extends BaseTestCase
         $provider = new Mapzen($this->getHttpClient($_SERVER['MAPZEN_API_KEY']), $_SERVER['MAPZEN_API_KEY']);
         $results = $provider->geocodeQuery(GeocodeQuery::create('242 Acklam Road, London, United Kingdom'));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(1, $results);
 
         /** @var \Geocoder\Model\Address $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(51.521124, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(-0.20360200000000001, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertEquals('Acklam Road', $result->getStreetName());
@@ -78,7 +78,7 @@ class MapzenTest extends BaseTestCase
         $this->assertEquals('GBR', $result->getCountry()->getCode());
     }
 
-    public function testReverseWithRealCoordinates()
+    public function testReverseWithRealCoordinates(): void
     {
         if (!isset($_SERVER['MAPZEN_API_KEY'])) {
             $this->markTestSkipped('You need to configure the MAPZEN_API_KEY value in phpunit.xml');
@@ -87,12 +87,12 @@ class MapzenTest extends BaseTestCase
         $provider = new Mapzen($this->getHttpClient($_SERVER['MAPZEN_API_KEY']), $_SERVER['MAPZEN_API_KEY']);
         $results = $provider->reverseQuery(ReverseQuery::fromCoordinates(54.0484068, -2.7990345));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(5, $results);
 
         /** @var \Geocoder\Model\Address $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(54.048411999999999, $result->getCoordinates()->getLatitude(), 0.001);
         $this->assertEqualsWithDelta(-2.7989549999999999, $result->getCoordinates()->getLongitude(), 0.001);
         $this->assertNull($result->getStreetNumber());
@@ -106,7 +106,7 @@ class MapzenTest extends BaseTestCase
         $this->assertEquals('GBR', $result->getCountry()->getCode());
     }
 
-    public function testReverseWithVillage()
+    public function testReverseWithVillage(): void
     {
         if (!isset($_SERVER['MAPZEN_API_KEY'])) {
             $this->markTestSkipped('You need to configure the MAPZEN_API_KEY value in phpunit.xml');
@@ -115,16 +115,16 @@ class MapzenTest extends BaseTestCase
         $provider = new Mapzen($this->getHttpClient($_SERVER['MAPZEN_API_KEY']), $_SERVER['MAPZEN_API_KEY']);
         $results = $provider->reverseQuery(ReverseQuery::fromCoordinates(49.1390924, 1.6572462));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(5, $results);
 
         /** @var \Geocoder\Model\Address $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEquals('Bus-Saint-Rémy', $result->getLocality());
     }
 
-    public function testGeocodeWithCity()
+    public function testGeocodeWithCity(): void
     {
         if (!isset($_SERVER['MAPZEN_API_KEY'])) {
             $this->markTestSkipped('You need to configure the MAPZEN_API_KEY value in phpunit.xml');
@@ -133,12 +133,12 @@ class MapzenTest extends BaseTestCase
         $provider = new Mapzen($this->getHttpClient($_SERVER['MAPZEN_API_KEY']), $_SERVER['MAPZEN_API_KEY']);
         $results = $provider->geocodeQuery(GeocodeQuery::create('Hanover'));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(5, $results);
 
         /** @var \Geocoder\Model\Address $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(42.027323000000003, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(-88.204203000000007, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertNull($result->getLocality());
@@ -149,7 +149,7 @@ class MapzenTest extends BaseTestCase
 
         /** @var \Geocoder\Model\Address $result */
         $result = $results->get(1);
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(18.393428, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(-78.122906, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertNull($result->getLocality());
@@ -159,7 +159,7 @@ class MapzenTest extends BaseTestCase
 
         /** @var \Geocoder\Model\Address $result */
         $result = $results->get(2);
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(39.192889999999998, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(-76.724140000000006, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertEquals('Hanover', $result->getLocality());
@@ -168,7 +168,7 @@ class MapzenTest extends BaseTestCase
         $this->assertEquals('United States', $result->getCountry()->getName());
     }
 
-    public function testGeocodeWithCityDistrict()
+    public function testGeocodeWithCityDistrict(): void
     {
         if (!isset($_SERVER['MAPZEN_API_KEY'])) {
             $this->markTestSkipped('You need to configure the MAPZEN_API_KEY value in phpunit.xml');
@@ -177,12 +177,12 @@ class MapzenTest extends BaseTestCase
         $provider = new Mapzen($this->getHttpClient($_SERVER['MAPZEN_API_KEY']), $_SERVER['MAPZEN_API_KEY']);
         $results = $provider->geocodeQuery(GeocodeQuery::create('Kalbacher Hauptstraße 10, 60437 Frankfurt, Germany'));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(2, $results);
 
         /** @var \Geocoder\Model\Address $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEqualsWithDelta(50.189017, $result->getCoordinates()->getLatitude(), 0.01);
         $this->assertEqualsWithDelta(8.6367809999999992, $result->getCoordinates()->getLongitude(), 0.01);
         $this->assertEquals('10a', $result->getStreetNumber());
@@ -197,7 +197,7 @@ class MapzenTest extends BaseTestCase
         $this->assertEquals('DEU', $result->getCountry()->getCode());
     }
 
-    public function testGeocodeQuotaExceeded()
+    public function testGeocodeQuotaExceeded(): void
     {
         $this->expectException(\Geocoder\Exception\QuotaExceeded::class);
         $this->expectExceptionMessage('Valid request but quota exceeded.');
@@ -222,7 +222,7 @@ class MapzenTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('New York'));
     }
 
-    public function testGeocodeInvalidApiKey()
+    public function testGeocodeInvalidApiKey(): void
     {
         $this->expectException(\Geocoder\Exception\InvalidCredentials::class);
         $this->expectExceptionMessage('Invalid or missing api key.');
@@ -247,7 +247,7 @@ class MapzenTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('New York'));
     }
 
-    public function testGeocodeWithLocalhostIPv4()
+    public function testGeocodeWithLocalhostIPv4(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('The Mapzen provider does not support IP addresses, only street addresses.');
@@ -256,7 +256,7 @@ class MapzenTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('127.0.0.1'));
     }
 
-    public function testGeocodeWithLocalhostIPv6()
+    public function testGeocodeWithLocalhostIPv6(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('The Mapzen provider does not support IP addresses, only street addresses.');
@@ -265,7 +265,7 @@ class MapzenTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('::1'));
     }
 
-    public function testGeocodeWithRealIPv4()
+    public function testGeocodeWithRealIPv4(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('The Mapzen provider does not support IP addresses, only street addresses.');
@@ -274,7 +274,7 @@ class MapzenTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('74.200.247.59'));
     }
 
-    public function testGeocodeWithRealIPv6()
+    public function testGeocodeWithRealIPv6(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('The Mapzen provider does not support IP addresses, only street addresses.');

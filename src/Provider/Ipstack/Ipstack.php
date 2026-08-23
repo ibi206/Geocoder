@@ -17,12 +17,12 @@ use Geocoder\Exception\InvalidArgument;
 use Geocoder\Exception\InvalidCredentials;
 use Geocoder\Exception\QuotaExceeded;
 use Geocoder\Exception\UnsupportedOperation;
+use Geocoder\Http\Provider\AbstractHttpProvider;
 use Geocoder\Model\Address;
 use Geocoder\Model\AddressCollection;
+use Geocoder\Provider\Provider;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
-use Geocoder\Http\Provider\AbstractHttpProvider;
-use Geocoder\Provider\Provider;
 use Psr\Http\Client\ClientInterface;
 
 /**
@@ -33,7 +33,7 @@ final class Ipstack extends AbstractHttpProvider implements Provider
     /**
      * @var string
      */
-    const GEOCODE_ENDPOINT_URL = 'http://api.ipstack.com/%s?access_key=%s';
+    public const GEOCODE_ENDPOINT_URL = 'http://api.ipstack.com/%s?access_key=%s';
 
     /**
      * @var string
@@ -54,9 +54,6 @@ final class Ipstack extends AbstractHttpProvider implements Provider
         parent::__construct($client);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function geocodeQuery(GeocodeQuery $query): Collection
     {
         $address = $query->getText();
@@ -76,6 +73,21 @@ final class Ipstack extends AbstractHttpProvider implements Provider
             $url = sprintf('%s&language=%s', $url, $query->getLocale());
         }
 
+        return $this->executeQuery($url);
+    }
+
+    public function reverseQuery(ReverseQuery $query): Collection
+    {
+        throw new UnsupportedOperation('The Ipstack provider is not able to do reverse geocoding.');
+    }
+
+    public function getName(): string
+    {
+        return 'ipstack';
+    }
+
+    private function executeQuery(string $url): AddressCollection
+    {
         $body = $this->getUrlContents($url);
         $data = json_decode($body, true);
 
@@ -102,32 +114,17 @@ final class Ipstack extends AbstractHttpProvider implements Provider
             return new AddressCollection([]);
         }
 
-        $locations[] = Address::createFromArray([
-            'providedBy' => $this->getName(),
-            'latitude' => $data['latitude'] ?: null,
-            'longitude' => $data['longitude'] ?: null,
-            'locality' => $data['city'] ?: null,
-            'postalCode' => $data['zip'] ?: null,
-            'country' => $data['country_name'] ?: null,
-            'countryCode' => $data['country_code'] ?: null,
+        return new AddressCollection([
+            Address::createFromArray([
+                'providedBy' => $this->getName(),
+                'latitude' => $data['latitude'] ?? null,
+                'longitude' => $data['longitude'] ?? null,
+                'locality' => $data['city'] ?? null,
+                'postalCode' => $data['zip'] ?? null,
+                'country' => $data['country_name'] ?? null,
+                'adminLevels' => isset($data['region_name']) ? [['name' => $data['region_name'], 'level' => 1]] : [],
+                'countryCode' => $data['country_code'] ?? null,
+            ]),
         ]);
-
-        return new AddressCollection($locations);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function reverseQuery(ReverseQuery $query): Collection
-    {
-        throw new UnsupportedOperation('The Ipstack provider is not able to do reverse geocoding.');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getName(): string
-    {
-        return 'ipstack';
     }
 }

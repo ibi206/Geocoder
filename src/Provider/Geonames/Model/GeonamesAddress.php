@@ -47,7 +47,7 @@ final class GeonamesAddress extends Address
     private $name;
 
     /**
-     * @var array
+     * @var string[]
      */
     private $alternateNames = [];
 
@@ -61,17 +61,12 @@ final class GeonamesAddress extends Address
     /**
      * @return string|null
      */
-    public function getName(): string
+    public function getName()
     {
         return $this->name;
     }
 
-    /**
-     * @param string|null $name
-     *
-     * @return self
-     */
-    public function withName(string $name = null): self
+    public function withName(?string $name = null): self
     {
         $new = clone $this;
         $new->name = $name;
@@ -164,7 +159,7 @@ final class GeonamesAddress extends Address
     }
 
     /**
-     * @return array
+     * @return string[]
      */
     public function getAlternateNames(): array
     {
@@ -172,7 +167,7 @@ final class GeonamesAddress extends Address
     }
 
     /**
-     * @param array $alternateNames
+     * @param string[] $alternateNames
      *
      * @return GeonamesAddress
      */

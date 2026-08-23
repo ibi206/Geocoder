@@ -12,8 +12,6 @@ declare(strict_types=1);
 
 namespace Geocoder\Provider\GoogleMapsPlaces\Model;
 
-use stdClass;
-
 /**
  * @author atymic <atymicq@gmail.com>
  */
@@ -25,7 +23,7 @@ class OpeningHours
     private $openNow;
 
     /**
-     * @var array[]
+     * @var array{close: array{day: int, time: string}, open: array{day: int, time: string}}
      */
     private $periods;
 
@@ -35,9 +33,9 @@ class OpeningHours
     private $weekdayText;
 
     /**
-     * @param bool|null $openNow
-     * @param array[]   $periods
-     * @param string[]  $weekdayText
+     * @param bool|null                                                                        $openNow
+     * @param array{close: array{day: int, time: string}, open: array{day: int, time: string}} $periods
+     * @param string[]                                                                         $weekdayText
      */
     public function __construct($openNow, array $periods, array $weekdayText)
     {
@@ -55,7 +53,7 @@ class OpeningHours
     }
 
     /**
-     * @return array[]
+     * @return array{close: array{day: int, time: string}, open: array{day: int, time: string}}
      */
     public function getPeriods(): array
     {
@@ -70,7 +68,7 @@ class OpeningHours
         return $this->weekdayText;
     }
 
-    public static function fromResult(stdClass $openingHours): self
+    public static function fromResult(\stdClass $openingHours): self
     {
         return new self(
             $openingHours->open_now ?? null,

@@ -29,9 +29,8 @@ abstract class AbstractHostIp extends AbstractHttpProvider implements Provider
 {
     abstract protected function executeQuery(string $url): AddressCollection;
 
-    /**
-     * {@inheritdoc}
-     */
+    abstract protected function getEndpointURL(): string;
+
     public function geocodeQuery(GeocodeQuery $query): Collection
     {
         $address = $query->getText();
@@ -48,51 +47,40 @@ abstract class AbstractHostIp extends AbstractHttpProvider implements Provider
             return new AddressCollection([$this->getLocationForLocalhost()]);
         }
 
-        $url = sprintf(static::ENDPOINT_URL, $address);
+        $url = sprintf($this->getEndpointURL(), $address);
 
         return $this->executeQuery($url);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function reverseQuery(ReverseQuery $query): Collection
     {
         throw new UnsupportedOperation('The HostIp provider is not able to do reverse geocoding.');
     }
 
     /**
-     * @param array $data
-     *
-     * @return bool
+     * @param array<string, mixed> $data
      */
     protected function isUnknownLocation(array $data): bool
     {
         return empty($data['lat'])
             && empty($data['lng'])
             && '(Unknown City?)' === $data['city']
-            && '(Unknown Country?)' === $data['country_name']
-            && 'XX' === $data;
+            && '(Unknown Country?)' === $data['country_name'];
     }
 
     /**
-     * @param array $data
-     *
-     * @return bool
+     * @param array<string, mixed> $data
      */
     protected function isPrivateLocation(array $data): bool
     {
         return empty($data['lat'])
             && empty($data['lng'])
             && '(Private Address)' === $data['city']
-            && '(Private Address)' === $data['country_name']
-            && 'XX' === $data;
+            && '(Private Address)' === $data['country_name'];
     }
 
     /**
-     * @param array $data
-     *
-     * @return AddressCollection
+     * @param array<string, mixed> $data
      */
     protected function prepareAddressCollection(array $data): AddressCollection
     {

@@ -14,24 +14,24 @@ namespace Geocoder\Provider\IpInfo\Tests;
 
 use Geocoder\IntegrationTest\BaseTestCase;
 use Geocoder\Location;
+use Geocoder\Provider\IpInfo\IpInfo;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
-use Geocoder\Provider\IpInfo\IpInfo;
 
 class IpInfoTest extends BaseTestCase
 {
-    protected function getCacheDir()
+    protected function getCacheDir(): string
     {
         return __DIR__.'/.cached_responses';
     }
 
-    public function testGetName()
+    public function testGetName(): void
     {
         $provider = new IpInfo($this->getMockedHttpClient());
         $this->assertEquals('ip_info', $provider->getName());
     }
 
-    public function testGeocodeWithRandomString()
+    public function testGeocodeWithRandomString(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('The IpInfo provider does not support street addresses, only IP addresses.');
@@ -40,7 +40,7 @@ class IpInfoTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('foobar'));
     }
 
-    public function testGeocodeWithAddress()
+    public function testGeocodeWithAddress(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('The IpInfo provider does not support street addresses, only IP addresses.');
@@ -50,17 +50,17 @@ class IpInfoTest extends BaseTestCase
     }
 
     /** @dataProvider provideLocalhostIps */
-    public function testGeocodeWithLocalhost($localhostIp)
+    public function testGeocodeWithLocalhost(string $localhostIp): void
     {
         $provider = new IpInfo($this->getMockedHttpClient());
-        $results = $provider->geocodeQuery(GeocodeQuery::create('127.0.0.1'));
+        $results = $provider->geocodeQuery(GeocodeQuery::create($localhostIp));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(1, $results);
 
         /** @var Location $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertNull($result->getCoordinates());
 
         $this->assertNull($result->getPostalCode());
@@ -71,13 +71,16 @@ class IpInfoTest extends BaseTestCase
         $this->assertEquals('localhost', $result->getCountry()->getName());
     }
 
-    public function provideLocalhostIps()
+    /**
+     * @return iterable<string[]>
+     */
+    public function provideLocalhostIps(): iterable
     {
         yield ['127.0.0.1'];
         yield ['::1'];
     }
 
-    public function testGeocodeWithRealIPv4GetsNullContent()
+    public function testGeocodeWithRealIPv4GetsNullContent(): void
     {
         $this->expectException(\Geocoder\Exception\InvalidServerResponse::class);
 
@@ -85,19 +88,19 @@ class IpInfoTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('74.125.45.100'));
     }
 
-    public function testGeocodeWithRealIPv4()
+    public function testGeocodeWithRealIPv4(): void
     {
         $provider = new IpInfo($this->getHttpClient());
         $results = $provider->geocodeQuery(GeocodeQuery::create('74.125.45.100'));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(1, $results);
 
         /** @var Location $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
-        $this->assertEquals(36.154, $result->getCoordinates()->getLatitude(), '', 0.001);
-        $this->assertEquals(-95.9928, $result->getCoordinates()->getLongitude(), '', 0.001);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
+        $this->assertEqualsWithDelta(36.154, $result->getCoordinates()->getLatitude(), 0.001);
+        $this->assertEqualsWithDelta(-95.9928, $result->getCoordinates()->getLongitude(), 0.001);
         $this->assertEquals(74102, $result->getPostalCode());
         $this->assertEquals('Tulsa', $result->getLocality());
         $this->assertCount(1, $result->getAdminLevels());
@@ -107,19 +110,19 @@ class IpInfoTest extends BaseTestCase
         $this->assertNull($result->getTimezone());
     }
 
-    public function testGeocodeWithRealIPv6()
+    public function testGeocodeWithRealIPv6(): void
     {
         $provider = new IpInfo($this->getHttpClient());
         $results = $provider->geocodeQuery(GeocodeQuery::create('2601:9:7680:363:75df:f491:6f85:352f'));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(1, $results);
 
         /** @var Location $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
-        $this->assertEquals(39.934, $result->getCoordinates()->getLatitude(), '', 0.001);
-        $this->assertEquals(-74.891, $result->getCoordinates()->getLongitude(), '', 0.001);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
+        $this->assertEqualsWithDelta(39.934, $result->getCoordinates()->getLatitude(), 0.001);
+        $this->assertEqualsWithDelta(-74.891, $result->getCoordinates()->getLongitude(), 0.001);
         $this->assertEquals('08054', $result->getPostalCode());
         $this->assertEquals('Mount Laurel', $result->getLocality());
         $this->assertNull($result->getCountry()->getName());
@@ -127,7 +130,7 @@ class IpInfoTest extends BaseTestCase
         $this->assertNull($result->getTimezone());
     }
 
-    public function testReverse()
+    public function testReverse(): void
     {
         $this->expectException(\Geocoder\Exception\UnsupportedOperation::class);
         $this->expectExceptionMessage('The IpInfo provider is not able to do reverse geocoding.');

@@ -23,12 +23,9 @@ use Psr\Log\AbstractLogger;
 
 class LoggerPluginTest extends TestCase
 {
-    public function testPlugin()
+    public function testPlugin(): void
     {
-        $logger = $this->getMockBuilder(AbstractLogger::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['log'])
-            ->getMock();
+        $logger = $this->createPartialMock(AbstractLogger::class, ['log']);
         $logger->expects($this->once())
             ->method('log')
             ->with('info', $this->callback(function ($message) {
@@ -38,10 +35,7 @@ class LoggerPluginTest extends TestCase
         $geocodeQuery = GeocodeQuery::create('foo');
         $collection = new AddressCollection([]);
 
-        $provider = $this->getMockBuilder(Provider::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['geocodeQuery', 'reverseQuery', 'getName'])
-            ->getMock();
+        $provider = $this->createPartialMock(Provider::class, ['geocodeQuery', 'reverseQuery', 'getName']);
         $provider->expects($this->once())
             ->method('geocodeQuery')
             ->with($geocodeQuery)
@@ -53,13 +47,10 @@ class LoggerPluginTest extends TestCase
         $this->assertSame($collection, $pluginProvider->geocodeQuery($geocodeQuery));
     }
 
-    public function testPluginException()
+    public function testPluginException(): void
     {
         $this->expectException(QuotaExceeded::class);
-        $logger = $this->getMockBuilder(AbstractLogger::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['log'])
-            ->getMock();
+        $logger = $this->createPartialMock(AbstractLogger::class, ['log']);
         $logger->expects($this->once())
             ->method('log')
             ->with('error', $this->callback(function ($message) {
@@ -67,10 +58,7 @@ class LoggerPluginTest extends TestCase
             }));
 
         $geocodeQuery = GeocodeQuery::create('foo');
-        $provider = $this->getMockBuilder(Provider::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['geocodeQuery', 'reverseQuery', 'getName'])
-            ->getMock();
+        $provider = $this->createPartialMock(Provider::class, ['geocodeQuery', 'reverseQuery', 'getName']);
         $provider->expects($this->once())
             ->method('geocodeQuery')
             ->willThrowException(new QuotaExceeded());

@@ -17,13 +17,13 @@ use Geocoder\Http\Provider\AbstractHttpProvider;
 use Geocoder\Model\AddressCollection;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
-use Psr\Http\Client\ClientInterface;
 use Http\Mock\Client;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Client\ClientInterface;
 
 class AbstractHttpProviderTest extends TestCase
 {
-    public function testHttpClientGetter()
+    public function testHttpClientGetter(): void
     {
         $client = $this->getMockBuilder(Client::class)->disableOriginalConstructor()->getMock();
         $provider = new DummyProvider($client);

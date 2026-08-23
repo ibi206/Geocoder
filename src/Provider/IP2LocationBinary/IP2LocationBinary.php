@@ -18,10 +18,10 @@ use Geocoder\Exception\InvalidArgument;
 use Geocoder\Exception\UnsupportedOperation;
 use Geocoder\Model\Address;
 use Geocoder\Model\AddressCollection;
-use Geocoder\Query\GeocodeQuery;
-use Geocoder\Query\ReverseQuery;
 use Geocoder\Provider\AbstractProvider;
 use Geocoder\Provider\Provider;
+use Geocoder\Query\GeocodeQuery;
+use Geocoder\Query\ReverseQuery;
 
 final class IP2LocationBinary extends AbstractProvider implements Provider
 {
@@ -36,13 +36,10 @@ final class IP2LocationBinary extends AbstractProvider implements Provider
     private $openFlag;
 
     /**
-     * @param string   $binFile
-     * @param int|null $openFlag
-     *
      * @throws FunctionNotFound if IP2Location's library not installed
      * @throws InvalidArgument  if dat file is not correct (optional)
      */
-    public function __construct(string $binFile, int $openFlag = null)
+    public function __construct(string $binFile, ?int $openFlag = null)
     {
         if (false === class_exists('\\IP2Location\\Database')) {
             throw new FunctionNotFound('ip2location_database', 'The IP2LocationBinary requires IP2Location\'s library to be installed and loaded.');
@@ -60,9 +57,6 @@ final class IP2LocationBinary extends AbstractProvider implements Provider
         $this->openFlag = null === $openFlag ? \IP2Location\Database::FILE_IO : $openFlag;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function geocodeQuery(GeocodeQuery $query): Collection
     {
         $address = $query->getText();
@@ -87,9 +81,9 @@ final class IP2LocationBinary extends AbstractProvider implements Provider
             Address::createFromArray([
                 'providedBy' => $this->getName(),
                 'countryCode' => $records['countryCode'],
-                'country' => null === $records['countryName'] ? null : utf8_encode($records['countryName']),
+                'country' => null === $records['countryName'] ? null : mb_convert_encoding($records['countryName'], 'UTF-8', 'ISO-8859-1'),
                 'adminLevels' => $adminLevels,
-                'locality' => null === $records['cityName'] ? null : utf8_encode($records['cityName']),
+                'locality' => null === $records['cityName'] ? null : mb_convert_encoding($records['cityName'], 'UTF-8', 'ISO-8859-1'),
                 'latitude' => $records['latitude'],
                 'longitude' => $records['longitude'],
                 'postalCode' => $records['zipCode'],
@@ -97,17 +91,11 @@ final class IP2LocationBinary extends AbstractProvider implements Provider
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function reverseQuery(ReverseQuery $query): Collection
     {
         throw new UnsupportedOperation('The IP2LocationBinary is not able to do reverse geocoding.');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getName(): string
     {
         return 'ip2location_binary';

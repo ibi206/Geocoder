@@ -13,10 +13,10 @@ declare(strict_types=1);
 namespace Geocoder\Provider\Chain\Tests;
 
 use Geocoder\Model\AddressCollection;
+use Geocoder\Provider\Chain\Chain;
+use Geocoder\Provider\Provider;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
-use Geocoder\Provider\Provider;
-use Geocoder\Provider\Chain\Chain;
 use Nyholm\NSA;
 use PHPUnit\Framework\TestCase;
 
@@ -25,57 +25,57 @@ use PHPUnit\Framework\TestCase;
  */
 class ChainTest extends TestCase
 {
-    public function testAdd()
+    public function testAdd(): void
     {
-        $mock = $this->getMockBuilder('Geocoder\Provider\Provider')->getMock();
+        $mock = $this->getMockBuilder(Provider::class)->getMock();
         $chain = new Chain();
 
         $chain->add($mock);
         $this->assertCount(1, NSA::getProperty($chain, 'providers'));
     }
 
-    public function testGetName()
+    public function testGetName(): void
     {
         $chain = new Chain();
         $this->assertEquals('chain', $chain->getName());
     }
 
-    public function testReverse()
+    public function testReverse(): void
     {
         $mockOne = $this->getMockBuilder(Provider::class)->getMock();
         $mockOne->expects($this->once())
             ->method('reverseQuery')
-            ->will($this->returnCallback(function () {
+            ->willReturnCallback(function () {
                 throw new \Exception();
-            }));
+            });
 
-        $mockTwo = $this->getMockBuilder('Geocoder\\Provider\\Provider')->getMock();
+        $mockTwo = $this->getMockBuilder(Provider::class)->getMock();
         $result = new AddressCollection(['foo' => 'bar']);
         $mockTwo->expects($this->once())
             ->method('reverseQuery')
-            ->will($this->returnValue($result));
+            ->willReturn($result);
 
         $chain = new Chain([$mockOne, $mockTwo]);
 
         $this->assertEquals($result, $chain->reverseQuery(ReverseQuery::fromCoordinates(11, 22)));
     }
 
-    public function testGeocode()
+    public function testGeocode(): void
     {
         $query = GeocodeQuery::create('Paris');
-        $mockOne = $this->getMockBuilder('Geocoder\\Provider\\Provider')->getMock();
+        $mockOne = $this->getMockBuilder(Provider::class)->getMock();
         $mockOne->expects($this->once())
             ->method('geocodeQuery')
-            ->will($this->returnCallback(function () {
+            ->willReturnCallback(function () {
                 throw new \Exception();
-            }));
+            });
 
-        $mockTwo = $this->getMockBuilder('Geocoder\\Provider\\Provider')->getMock();
+        $mockTwo = $this->getMockBuilder(Provider::class)->getMock();
         $result = new AddressCollection(['foo' => 'bar']);
         $mockTwo->expects($this->once())
             ->method('geocodeQuery')
             ->with($query)
-            ->will($this->returnValue($result));
+            ->willReturn($result);
 
         $chain = new Chain([$mockOne, $mockTwo]);
 

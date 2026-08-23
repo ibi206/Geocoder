@@ -2,6 +2,18 @@
 
 The change log describes what is "Added", "Removed", "Changed" or "Fixed" between each release.
 
+## 1.5.0
+
+### Added
+
+- Add support for PHP Geocoder 5
+
+## 1.4.1
+
+### Fixed
+
+- Fix extraction of error message from response
+
 ## 1.4.0
 
 ### Added

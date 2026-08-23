@@ -15,18 +15,18 @@ namespace Geocoder\Provider\PickPoint\Tests;
 use Geocoder\Collection;
 use Geocoder\IntegrationTest\BaseTestCase;
 use Geocoder\Location;
+use Geocoder\Provider\PickPoint\PickPoint;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
-use Geocoder\Provider\PickPoint\PickPoint;
 
 class PickPointTest extends BaseTestCase
 {
-    protected function getCacheDir()
+    protected function getCacheDir(): string
     {
         return __DIR__.'/.cached_responses';
     }
 
-    public function testGeocodeWithAddressGetsEmptyContent()
+    public function testGeocodeWithAddressGetsEmptyContent(): void
     {
         $this->expectException(\Geocoder\Exception\InvalidServerResponse::class);
 
@@ -34,7 +34,7 @@ class PickPointTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('Läntinen Pitkäkatu 35, Turku'));
     }
 
-    public function testGeocodeWithAddressGetsEmptyXML()
+    public function testGeocodeWithAddressGetsEmptyXML(): void
     {
         $this->expectException(\Geocoder\Exception\InvalidServerResponse::class);
 
@@ -45,7 +45,7 @@ XML;
         $provider->geocodeQuery(GeocodeQuery::create('Läntinen Pitkäkatu 35, Turku'));
     }
 
-    public function testReverseWithCoordinatesGetsError()
+    public function testReverseWithCoordinatesGetsError(): void
     {
         $errorXml = <<<'XML'
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -61,17 +61,17 @@ XML;
         $this->assertEquals(0, $result->count());
     }
 
-    public function testGetNodeStreetName()
+    public function testGetNodeStreetName(): void
     {
         $provider = new PickPoint($this->getHttpClient($_SERVER['PICKPOINT_API_KEY']), $_SERVER['PICKPOINT_API_KEY']);
         $results = $provider->reverseQuery(ReverseQuery::fromCoordinates(48.86, 2.35));
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         $this->assertCount(1, $results);
 
         /** @var Location $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
         $this->assertEquals('Rue Quincampoix', $result->getStreetName());
     }
 }

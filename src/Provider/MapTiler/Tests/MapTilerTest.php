@@ -14,21 +14,21 @@ namespace Geocoder\Provider\MapTiler\Tests;
 
 use Geocoder\IntegrationTest\BaseTestCase;
 use Geocoder\Model\Bounds;
+use Geocoder\Provider\MapTiler\MapTiler;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
-use Geocoder\Provider\MapTiler\MapTiler;
 
 /**
  * @author Jonathan Beliën
  */
 class MapTilerTest extends BaseTestCase
 {
-    protected function getCacheDir()
+    protected function getCacheDir(): string
     {
         return __DIR__.'/.cached_responses';
     }
 
-    public function testGeocodeWithLocalhostIPv4()
+    public function testGeocodeWithLocalhostIPv4(): void
     {
         if (!isset($_SERVER['MAPTILER_KEY'])) {
             $this->markTestSkipped('You need to configure the MAPTILER_KEY value in phpunit.xml');
@@ -41,7 +41,7 @@ class MapTilerTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('127.0.0.1'));
     }
 
-    public function testGeocodeWithLocalhostIPv6()
+    public function testGeocodeWithLocalhostIPv6(): void
     {
         if (!isset($_SERVER['MAPTILER_KEY'])) {
             $this->markTestSkipped('You need to configure the MAPTILER_KEY value in phpunit.xml');
@@ -54,7 +54,7 @@ class MapTilerTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('::1'));
     }
 
-    public function testGeocodeWithRealIPv6()
+    public function testGeocodeWithRealIPv6(): void
     {
         if (!isset($_SERVER['MAPTILER_KEY'])) {
             $this->markTestSkipped('You need to configure the MAPTILER_KEY value in phpunit.xml');
@@ -67,7 +67,7 @@ class MapTilerTest extends BaseTestCase
         $provider->geocodeQuery(GeocodeQuery::create('::ffff:88.188.221.14'));
     }
 
-    public function testGeocodeQueryStreet()
+    public function testGeocodeQueryStreet(): void
     {
         if (!isset($_SERVER['MAPTILER_KEY'])) {
             $this->markTestSkipped('You need to configure the MAPTILER_KEY value in phpunit.xml');
@@ -79,20 +79,20 @@ class MapTilerTest extends BaseTestCase
         $provider = new MapTiler($this->getHttpClient($_SERVER['MAPTILER_KEY']), $_SERVER['MAPTILER_KEY']);
         $results = $provider->geocodeQuery($query);
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         // $this->assertCount(1, $results);
 
         /** @var \Geocoder\Model\Address $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
-        $this->assertEquals(48.8658863, $result->getCoordinates()->getLatitude(), '', 0.00001);
-        $this->assertEquals(2.3993232, $result->getCoordinates()->getLongitude(), '', 0.00001);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
+        $this->assertEqualsWithDelta(48.8658863, $result->getCoordinates()->getLatitude(), 0.00001);
+        $this->assertEqualsWithDelta(2.3993232, $result->getCoordinates()->getLongitude(), 0.00001);
         $this->assertEquals('Avenue Gambetta', $result->getStreetName());
         $this->assertEquals('Paris', $result->getLocality());
         $this->assertEquals('France', $result->getCountry());
     }
 
-    public function testGeocodeQueryCity()
+    public function testGeocodeQueryCity(): void
     {
         if (!isset($_SERVER['MAPTILER_KEY'])) {
             $this->markTestSkipped('You need to configure the MAPTILER_KEY value in phpunit.xml');
@@ -103,19 +103,19 @@ class MapTilerTest extends BaseTestCase
         $provider = new MapTiler($this->getHttpClient($_SERVER['MAPTILER_KEY']), $_SERVER['MAPTILER_KEY']);
         $results = $provider->geocodeQuery($query);
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         // $this->assertCount(1, $results);
 
         /** @var \Geocoder\Model\Address $result */
         $result = $results->get(1);
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
-        $this->assertEquals(48.85881, $result->getCoordinates()->getLatitude(), '', 0.00001);
-        $this->assertEquals(2.320031, $result->getCoordinates()->getLongitude(), '', 0.00001);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
+        $this->assertEqualsWithDelta(48.85881, $result->getCoordinates()->getLatitude(), 0.00001);
+        $this->assertEqualsWithDelta(2.320031, $result->getCoordinates()->getLongitude(), 0.00001);
         $this->assertEquals('Paris', $result->getLocality());
         $this->assertEquals('France', $result->getCountry());
     }
 
-    public function testReverseQuery()
+    public function testReverseQuery(): void
     {
         if (!isset($_SERVER['MAPTILER_KEY'])) {
             $this->markTestSkipped('You need to configure the MAPTILER_KEY value in phpunit.xml');
@@ -126,14 +126,14 @@ class MapTilerTest extends BaseTestCase
         $provider = new MapTiler($this->getHttpClient($_SERVER['MAPTILER_KEY']), $_SERVER['MAPTILER_KEY']);
         $results = $provider->reverseQuery($query);
 
-        $this->assertInstanceOf('Geocoder\Model\AddressCollection', $results);
+        $this->assertInstanceOf(\Geocoder\Model\AddressCollection::class, $results);
         // $this->assertCount(1, $results);
 
         /** @var \Geocoder\Model\Address $result */
         $result = $results->first();
-        $this->assertInstanceOf('\Geocoder\Model\Address', $result);
-        $this->assertEquals(47.3774434, $result->getCoordinates()->getLatitude(), '', 0.00001);
-        $this->assertEquals(8.528509, $result->getCoordinates()->getLongitude(), '', 0.00001);
+        $this->assertInstanceOf(\Geocoder\Model\Address::class, $result);
+        $this->assertEqualsWithDelta(47.3774434, $result->getCoordinates()->getLatitude(), 0.00001);
+        $this->assertEqualsWithDelta(8.528509, $result->getCoordinates()->getLongitude(), 0.00001);
         $this->assertEquals('Zurich', $result->getLocality());
         $this->assertEquals('Switzerland', $result->getCountry());
     }
