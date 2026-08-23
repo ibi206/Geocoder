@@ -57,7 +57,7 @@ final class Geoapify extends AbstractHttpProvider implements Provider
         return $this->executeQuery($url, $query->getLocale());
     }
 
-    private function executeQuery(string $url, string $locale = null): AddressCollection
+    private function executeQuery(string $url, ?string $locale = null): AddressCollection
     {
         if (null !== $locale) {
             $url .= '&'.http_build_query([
